@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Preparation | Préparation des données</title>
+<style>
+:root{--bg:#fbf7f0;--card:#ffffff;--ink:#1d2433;--muted:#5b6475;--accent:#e4572e;--accent2:#17a398;--accent3:#f3a712;--line:#e6dfd3}
+@media (prefers-color-scheme: dark){:root{--bg:#141821;--card:#1d2330;--ink:#eef1f6;--muted:#9aa4b5;--line:#2c3444}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;display:flex;flex-direction:column}
+main{flex:1;max-width:1000px;width:100%;margin:0 auto;padding:56px 22px 40px;display:flex;flex-direction:column;justify-content:center}
+.kicker{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;text-align:center}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.15;text-align:center;margin:10px 0 12px}
+.sub{text-align:center;color:var(--muted);font-size:18px;max-width:640px;margin:0 auto 34px}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:720px){.choices{grid-template-columns:1fr}}
+a.choice{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px;box-shadow:0 10px 30px rgba(0,0,0,.06);transition:transform .2s,box-shadow .2s,border-color .2s;position:relative;overflow:hidden}
+a.choice:hover,a.choice:focus-visible{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.1);border-color:var(--accent);outline:none}
+.badge{align-self:flex-start;font-size:13px;font-weight:700;letter-spacing:.08em;padding:4px 12px;border-radius:999px;color:#fff;margin-bottom:14px}
+.en .badge{background:var(--accent2)}
+.fr .badge{background:var(--accent)}
+.choice h2{font-size:24px;margin:0 0 8px}
+.choice p{margin:0 0 16px;color:var(--muted)}
+.choice ul{margin:0 0 22px;padding-left:20px;color:var(--muted);font-size:15px}
+.choice ul li{margin:4px 0}
+.cta{margin-top:auto;font-weight:700;color:var(--ink)}
+.cta span{display:inline-block;transition:transform .2s}
+a.choice:hover .cta span{transform:translateX(6px)}
+.recommended::after{content:attr(data-rec);position:absolute;top:14px;right:14px;font-size:12px;background:var(--accent3);color:#1d2433;padding:3px 10px;border-radius:999px;font-weight:700}
+.chapters{margin-top:44px;text-align:center;color:var(--muted);font-size:15px}
+.chapters strong{color:var(--ink)}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:20px}
+</style>
+</head>
+<body>
+<main>
+  <div class="kicker">Chapter 2 · Data Preparation</div>
+  <h1>Data Preparation<br><span style="color:var(--muted);font-size:.6em;font-weight:600">Préparation des données</span></h1>
+  <p class="sub">An interactive story that walks you through data preparation, from profiling to computer vision. Choose your language to start.<br><span style="font-size:16px">Une histoire interactive qui vous guide dans la préparation des données, du profilage à la vision par ordinateur. Choisissez votre langue pour commencer.</span></p>
+
+  <figure style="margin:0 0 36px">
+    <svg viewBox="0 0 900 220" role="img" aria-labelledby="pipeTitle" style="width:100%;height:auto;display:block">
+      <title id="pipeTitle">Data preparation pipeline: raw data, cleaning, transformation, model</title>
+      <defs>
+        <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#e4572e"/>
+        </marker>
+      </defs>
+      <!-- raw data: messy table -->
+      <rect x="20" y="50" width="170" height="120" rx="16" fill="#ffffff" stroke="#e6dfd3" stroke-width="2"/>
+      <g fill="#e6dfd3"><rect x="40" y="75" width="60" height="10" rx="3"/><rect x="110" y="75" width="40" height="10" rx="3"/><rect x="40" y="97" width="30" height="10" rx="3"/><rect x="80" y="97" width="70" height="10" rx="3"/><rect x="40" y="119" width="50" height="10" rx="3"/><rect x="100" y="119" width="50" height="10" rx="3"/></g>
+      <circle cx="165" cy="78" r="7" fill="#d7263d"/><circle cx="58" cy="141" r="7" fill="#d7263d"/>
+      <text x="105" y="200" text-anchor="middle" font-size="16" font-weight="700" fill="#1d2433">Raw data</text>
+      <!-- cleaning: broom/filter -->
+      <path d="M220,60 L300,60 L260,120 Z" fill="#17a398" opacity=".85"/>
+      <rect x="252" y="120" width="16" height="40" fill="#17a398"/>
+      <text x="260" y="200" text-anchor="middle" font-size="16" font-weight="700" fill="#1d2433">Cleaning</text>
+      <!-- transformation: scaling bars -->
+      <rect x="360" y="100" width="18" height="60" rx="4" fill="#f3a712"/>
+      <rect x="390" y="75" width="18" height="85" rx="4" fill="#f3a712"/>
+      <rect x="420" y="60" width="18" height="100" rx="4" fill="#f3a712"/>
+      <text x="410" y="200" text-anchor="middle" font-size="16" font-weight="700" fill="#1d2433">Transformation</text>
+      <!-- model: nodes -->
+      <g stroke="#e4572e" stroke-width="2" fill="none"><line x1="560" y1="70" x2="620" y2="50"/><line x1="560" y1="70" x2="620" y2="110"/><line x1="560" y1="110" x2="620" y2="50"/><line x1="560" y1="110" x2="620" y2="110"/><line x1="560" y1="110" x2="620" y2="170"/></g>
+      <g fill="#e4572e"><circle cx="560" cy="70" r="9"/><circle cx="560" cy="110" r="9"/><circle cx="620" cy="50" r="9"/><circle cx="620" cy="110" r="9"/><circle cx="620" cy="170" r="9"/></g>
+      <text x="590" y="200" text-anchor="middle" font-size="16" font-weight="700" fill="#1d2433">Model</text>
+      <!-- arrows -->
+      <g stroke="#e4572e" stroke-width="3" fill="none" marker-end="url(#arr)"><line x1="200" y1="110" x2="214" y2="110"/><line x1="312" y1="110" x2="350" y2="110"/><line x1="448" y1="110" x2="525" y2="110"/></g>
+    </svg>
+    <figcaption style="text-align:center;color:var(--muted);font-size:14px;margin-top:6px">Raw data → cleaning → transformation → model · Données brutes → nettoyage → transformation → modèle</figcaption>
+  </figure>
+
+  <div class="choices">
+    <a class="choice en" href="data_preparation_story.html" data-rec="Suggested · Suggéré" id="optEN">
+      <span class="badge">ENGLISH</span>
+      <h2>Start in English</h2>
+      <p>Follow Sami through six preparation missions and three computer vision missions.</p>
+      <ul>
+        <li>Discovery, cleaning, splitting, transformation</li>
+        <li>Feature engineering and dimensionality reduction</li>
+        <li>Images as matrices, colour, shape and texture features</li>
+      </ul>
+      <span class="cta">Start the story <span>→</span></span>
+    </a>
+
+    <a class="choice fr" href="data_preparation_story_fr.html" data-rec="Suggéré · Suggested" id="optFR">
+      <span class="badge">FRANÇAIS</span>
+      <h2>Commencer en français</h2>
+      <p>Suivez Sami à travers six missions de préparation et trois missions de vision par ordinateur.</p>
+      <ul>
+        <li>Découverte, nettoyage, séparation, transformation</li>
+        <li>Ingénierie des variables et réduction de dimension</li>
+        <li>Images en matrices, caractéristiques de couleur, forme et texture</li>
+      </ul>
+      <span class="cta">Commencer l'histoire <span>→</span></span>
+    </a>
+  </div>
+
+  <p class="chapters"><strong>Included:</strong> discovery &amp; profiling · cleaning · train/test split · scaling &amp; distributions · feature engineering · feature selection &amp; projection (PCA) · images as data · feature extraction · image feature selection</p>
+</main>
+<footer>Based on Chapter 2, Data Preparation · Noura Aboudi, PhD · Horizon University</footer>
+
+<script>
+/* Highlight the language matching the visitor's browser setting */
+(function(){
+  const lang=(navigator.language||'en').toLowerCase();
+  const el=lang.startsWith('fr')?document.getElementById('optFR'):document.getElementById('optEN');
+  el.classList.add('recommended');
+})();
+</script>
+</body>
+</html>

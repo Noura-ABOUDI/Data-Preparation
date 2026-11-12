@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sami et le jeu de données rebelle | Préparation des données</title>
+<style>
+:root{--bg:#fbf7f0;--card:#ffffff;--ink:#1d2433;--muted:#5b6475;--accent:#e4572e;--accent2:#17a398;--accent3:#f3a712;--bad:#d7263d;--good:#2e9e5b;--line:#e6dfd3;--code:#101520}
+@media (prefers-color-scheme: dark){:root{--bg:#141821;--card:#1d2330;--ink:#eef1f6;--muted:#9aa4b5;--line:#2c3444}}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:14px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+.brand{font-weight:700}
+.dots{display:flex;gap:8px;flex-wrap:wrap}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--line);border:0;cursor:pointer;padding:0;transition:all .3s}
+.dot.on{background:var(--accent);transform:scale(1.3)}
+.dot.done{background:var(--accent2)}
+main{max-width:980px;margin:0 auto;padding:28px 20px 110px}
+.scene{display:none}
+.scene.on{display:block;animation:rise .6s ease}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.chapter{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{font-size:clamp(28px,4vw,40px);margin:6px 0 10px;line-height:1.2}
+h2{font-size:22px;margin:4px 0 10px}
+.story{font-size:18px;border-left:4px solid var(--accent3);padding:4px 16px;margin:16px 0 22px;font-style:italic}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:16px 0;box-shadow:0 6px 20px rgba(0,0,0,.05)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.row{grid-template-columns:1fr}}
+.btn{background:var(--ink);color:var(--bg);border:0;padding:9px 16px;border-radius:999px;cursor:pointer;font-size:15px;margin:4px 6px 4px 0;transition:transform .15s,opacity .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+.btn.fix{background:var(--accent2);color:#fff}
+.btn:disabled{opacity:.35;cursor:default;transform:none}
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--line);display:flex;justify-content:space-between;padding:12px 20px}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:13px;color:var(--muted);font-weight:600}
+tr{transition:opacity .45s,transform .45s}
+tr.gone{opacity:0;transform:translateX(40px)}
+td{transition:background .5s}
+td.bad{background:rgba(215,38,61,.15);color:var(--bad);font-weight:600}
+td.fixed{background:rgba(46,158,91,.18);color:var(--good);font-weight:600}
+.tag{display:inline-block;background:var(--line);padding:1px 8px;border-radius:6px;font-size:12px;margin-left:6px;color:var(--muted)}
+.bars{display:flex;align-items:flex-end;gap:6px;height:180px;border-bottom:2px solid var(--line);padding:0 4px;margin-top:22px}
+.bar{flex:1;background:var(--accent2);border-radius:6px 6px 0 0;transition:height .8s cubic-bezier(.2,.8,.2,1);position:relative;min-height:0}
+.bar b{position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:12px;color:var(--muted);font-weight:600}
+.labels{display:flex;gap:6px;font-size:12px;color:var(--muted);padding:4px}
+.labels div{flex:1;text-align:center}
+.meter{height:14px;background:var(--line);border-radius:99px;overflow:hidden;margin:10px 0}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--bad),var(--accent3),var(--good));transition:width .8s}
+.plot{position:relative;height:280px;border-left:2px solid var(--line);border-bottom:2px solid var(--line);margin:14px 4px 6px}
+.pt{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--accent);transform:translate(-50%,-50%);transition:left .9s cubic-bezier(.2,.8,.2,1),top .9s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 0 3px rgba(228,87,46,.2)}
+.chip{display:inline-block;padding:6px 12px;border-radius:999px;color:#fff;font-size:14px;margin:4px;animation:pop .5s both}
+.chip.tr{background:#4f7cff}.chip.te{background:var(--accent3)}.chip.pool{background:var(--line);color:var(--ink);animation:none}
+.chip.feat{background:var(--accent2)}
+@keyframes pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+.box{flex:1;min-height:110px;border:2px dashed var(--line);border-radius:14px;padding:10px}
+.boxes{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}
+.pipe{position:relative;height:110px;margin:22px 0}
+.stage{position:absolute;top:20px;width:170px;padding:14px 8px;text-align:center;border-radius:14px;background:var(--bg);border:1px solid var(--line);font-size:14px;font-weight:600}
+.flow{position:absolute;top:44px;width:14px;height:14px;border-radius:50%;background:var(--accent3);animation:flow 3.5s linear infinite}
+@keyframes flow{from{left:0;opacity:0}8%{opacity:1}92%{opacity:1}to{left:calc(100% - 14px);opacity:0}}
+.code{background:var(--code);color:#e6edf7;border-radius:12px;padding:14px;font-size:13px;overflow-x:auto;font-family:ui-monospace,Consolas,monospace;white-space:pre;margin:10px 0 0}
+details{margin-top:14px}
+summary{cursor:pointer;color:var(--accent);font-weight:600}
+.note{background:rgba(23,163,152,.1);border-radius:12px;padding:12px 14px;margin-top:12px}
+.warn{background:rgba(215,38,61,.08);border-radius:12px;padding:12px 14px;margin-top:12px}
+.toggle{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.stat{font-size:15px;color:var(--muted);margin:8px 0}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.check input{margin-top:6px;width:18px;height:18px;accent-color:var(--good)}
+.finale{font-size:18px;font-weight:600;color:var(--good);min-height:28px}
+.pop{animation:pop .5s both}
+canvas{display:block;width:100%;height:300px}
+.feat-row{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:15px}
+.feat-row .nm{width:150px}
+.feat-row .bg{flex:1;height:12px;background:var(--line);border-radius:99px;overflow:hidden}
+.feat-row .bg i{display:block;height:100%;background:var(--accent2);width:0;transition:width .8s}
+.feat-row.keep .nm{font-weight:700;color:var(--good)}
+.pixgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;max-width:280px;margin:0 auto}
+.pixmat td{font-size:11px;padding:3px 5px;text-align:right;border:0}
+.patb.alt{opacity:.7}
+.showc{width:240px;height:240px;image-rendering:pixelated;border-radius:12px;border:1px solid var(--line);display:block;cursor:crosshair}
+.smallc{width:150px;height:150px;image-rendering:pixelated;border-radius:10px;border:1px solid var(--line);display:block}
+.scrollx{overflow-x:auto;max-width:100%}
+.scrollx .pixmat td{font-size:9px;padding:1px 2px}
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.subcard{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px}
+.ft td{padding:4px 6px;border-bottom:1px solid var(--line);font-size:14px}
+.ft td:last-child{text-align:right;font-weight:600}
+@media (max-width:760px){.cards3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Sami et le jeu de données rebelle</div>
+  <div class="dots" id="dots"></div>
+</header>
+
+<main>
+
+<!-- ============ SCÈNE 0 : PROLOGUE ============ -->
+<section class="scene" data-title="Prologue">
+  <div class="chapter">Prologue · Introduction à la préparation des données</div>
+  <h1>Le jeu de données qui ne voulait pas coopérer</h1>
+  <p class="story">Sami vient de rejoindre Fennec Express, une start-up de livraison basée à Sousse. L'équipe veut un modèle capable de prédire la durée de chaque livraison en minutes. Sami ouvre l'export de l'application : des enregistrements bruts, dont certains sont manifestement cassés. Aucun algorithme ne peut apprendre quoi que ce soit à partir de là.</p>
+
+  <div class="card">
+    <p><strong>La préparation des données</strong> consiste à nettoyer, formater, transformer et intégrer des données brutes afin de les rendre exploitables par un modèle. Elle influence directement la qualité du modèle final.</p>
+    <div class="pipe">
+      <div class="flow"></div>
+      <div class="stage" style="left:0">Données brutes</div>
+      <div class="stage" style="left:50%;transform:translateX(-50%)">Préparation des données</div>
+      <div class="stage" style="right:0">Modèle de ML</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Les missions de Sami</h2>
+    <p>Chaque mission correspond à une étape du chapitre. Terminez-les toutes pour que le modèle de livraison dispose enfin d'un jeu de données propre.</p>
+    <ol>
+      <li>Découverte et profilage : comprendre ce que contiennent les données</li>
+      <li>Nettoyage : corriger les valeurs manquantes, doublons, erreurs et valeurs aberrantes</li>
+      <li>Séparer d'abord : séparer apprentissage et test avant toute préparation</li>
+      <li>Transformation : mettre à l'échelle les variables et remodeler les distributions</li>
+      <li>Ingénierie des variables : créer de nouvelles variables et encoder les catégories</li>
+      <li>Réduction de dimension : sélectionner ou projeter les variables</li>
+      <li>Images comme données : transformer une grille de pixels en tableau</li>
+      <li>Extraction de caractéristiques : couleur, forme et texture d'une photo</li>
+      <li>Sélection de caractéristiques d'image : garder ce qui distingue voiture, chat et chien</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ SCÈNE 1 : DÉCOUVERTE ============ -->
+<section class="scene" data-title="Découverte">
+  <div class="chapter">Mission 1 · Découverte et profilage des données</div>
+  <h1>Observer avant de toucher</h1>
+  <p class="story">Sami charge l'export et pose la première question que doit poser tout analyste : que contient exactement ce fichier ? Voici les huit premières lignes.</p>
+
+  <div class="card">
+    <div id="discTable"></div>
+    <button class="btn" id="btnDiag">Diagnostic : valeurs manquantes et doublons</button>
+    <button class="btn alt" id="btnHist">Afficher la distribution de delivery_min</button>
+    <p class="stat" id="discSummary"></p>
+    <div id="discHist" class="bars"></div>
+    <div id="discLabels" class="labels"></div>
+    <p class="stat" id="discStats"></p>
+  </div>
+
+  <div class="note"><strong>Le profilage répond à :</strong> quels sont les types, les plages de valeurs, les valeurs manquantes, les doublons et les distributions ? Une seule livraison de 300 minutes tire la moyenne vers le haut, et l'histogramme la montre comme une barre isolée très à droite.</div>
+
+  <details>
+    <summary>Voir le code du cours (diapositives 10 à 13)</summary>
+<pre class="code">import pandas as pd
+data = pd.read_csv('filename.csv')
+print(data.head())
+print(data.info())
+print(data.describe())
+print(data.isnull().sum())      # valeurs manquantes
+print(data.duplicated().sum())  # doublons
+data.plot.hist(bins=10)</pre>
+  </details>
+</section>
+
+<!-- ============ SCÈNE 2 : NETTOYAGE ============ -->
+<section class="scene" data-title="Nettoyage">
+  <div class="chapter">Mission 2 · Nettoyage des données</div>
+  <h1>Corriger les quatre problèmes</h1>
+  <p class="story">Sami a repéré quatre problèmes : une ligne dupliquée, une distance manquante, un âge impossible et une durée de livraison qui ne peut pas être réelle. Appliquez chaque correction et regardez l'indicateur de santé des données monter.</p>
+
+  <div class="card">
+    <div class="meter"><i id="healthBar"></i></div>
+    <p class="stat" id="healthText"></p>
+    <div class="toggle">
+      <button class="btn fix" data-fix="dup">1. Supprimer les lignes en double</button>
+      <button class="btn fix" data-fix="miss">2. Imputer la distance manquante (médiane)</button>
+      <button class="btn fix" data-fix="age">3. Corriger l'âge impossible</button>
+      <button class="btn fix" data-fix="out">4. Filtrer les valeurs aberrantes (règle IQR)</button>
+    </div>
+    <div id="cleanTable"></div>
+    <p class="stat" id="cleanNote"></p>
+  </div>
+
+  <div class="note"><strong>Nettoyer en quatre étapes :</strong> supprimer les observations inutiles, traiter les valeurs manquantes (supprimer ou imputer), corriger les erreurs et filtrer les valeurs aberrantes. Les cellules vertes sont corrigées, les rouges demandent encore une action. La règle IQR signale toute valeur inférieure à Q1 − 1,5·IQR ou supérieure à Q3 + 1,5·IQR.</div>
+
+  <details>
+    <summary>Voir le code du cours (diapositives 22, 24 à 26)</summary>
+<pre class="code">df = df.drop_duplicates()
+df_mean = df.fillna(df.mean())
+df['Age'] = df['Age'].replace({-5: 35})
+
+Q1 = df['Age'].quantile(0.25)
+Q3 = df['Age'].quantile(0.75)
+IQR = Q3 - Q1
+df = df[~((df['Age'] &lt; Q1 - 1.5 * IQR) | (df['Age'] &gt; Q3 + 1.5 * IQR))]</pre>
+  </details>
+</section>
+
+<!-- ============ SCÈNE 3 : SÉPARER D'ABORD ============ -->
+<section class="scene" data-title="Séparer d'abord">
+  <div class="chapter">Mission 3 · Séparer avant de préparer</div>
+  <h1>L'examen doit rester scellé</h1>
+  <p class="story">Le mentor de Sami se penche : « Avant de mettre quoi que ce soit à l'échelle, séparez les données. L'ensemble de test est l'examen. Si vous révisez avec, votre note ne veut plus rien dire. » Dix lignes de livraison attendent d'être réparties.</p>
+
+  <div class="card">
+    <div class="toggle">
+      <button class="btn" id="btnSplit">Découper 80 / 20</button>
+      <button class="btn alt" id="btnShuffle">Mélanger à nouveau</button>
+    </div>
+    <div id="pool" class="stat"></div>
+    <div class="boxes">
+      <div class="box"><strong>Ensemble d'entraînement (8 lignes)</strong><div id="trainBox"></div></div>
+      <div class="box"><strong>Ensemble de test (2 lignes)</strong><div id="testBox"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Sur quelles données le scaler doit-il apprendre ?</h2>
+    <div class="toggle">
+      <button class="btn" id="btnGood">Ajuster sur l'entraînement uniquement</button>
+      <button class="btn alt" id="btnBad">Tout mettre à l'échelle, puis découper</button>
+    </div>
+    <p class="stat" id="leakText">Choisissez une option pour voir ce qui arrive à l'ensemble de test.</p>
+  </div>
+
+  <details>
+    <summary>Voir le code du cours (diapositive 28)</summary>
+<pre class="code">from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2)</pre>
+  </details>
+</section>
+
+<!-- ============ SCÈNE 4 : TRANSFORMATION ============ -->
+<section class="scene" data-title="Transformation">
+  <div class="chapter">Mission 4 · Transformation des données</div>
+  <h1>Même forme, nouvelle échelle</h1>
+  <p class="story">Les variables de Sami n'ont pas du tout la même échelle : l'une va jusqu'à 12 000, l'autre de 1 à 5. Les algorithmes qui mesurent des distances s'y perdent. Essayez les différents scalers et observez le déplacement des points.</p>
+
+  <div class="row">
+    <div class="card">
+      <h2>Mise à l'échelle des variables</h2>
+      <div class="toggle">
+        <button class="btn alt sc" data-mode="orig">Originales</button>
+        <button class="btn sc" data-mode="mm">Min-Max</button>
+        <button class="btn sc" data-mode="std">Standard</button>
+      </div>
+      <div class="plot" id="scalePlot"></div>
+      <p class="stat" id="scaleText"></p>
+    </div>
+
+    <div class="card">
+      <h2>Remodeler une distribution asymétrique</h2>
+      <p class="stat">Faites glisser le paramètre de puissance pour remodeler les distances de livraison, dont la distribution est asymétrique à droite.</p>
+      <input type="range" id="lam" min="0" max="100" value="0">
+      <p class="stat" id="lamText"></p>
+      <div id="skewBars" class="bars"></div>
+      <p class="stat" id="skewText"></p>
+    </div>
+  </div>
+
+  <div class="warn"><strong>Min-Max</strong> ramène les valeurs dans [0, 1] et est sensible aux valeurs aberrantes. <strong>Standard</strong> centre les données (moyenne 0, variance unitaire) et y est moins sensible. La formule de la diapositive 30 est X_new = (X − min) / (max − min). La transformation de puissance ci-dessus est une version simplifiée de Box-Cox ; le PowerTransformer(method='yeo-johnson') du cours gère aussi les valeurs négatives.</div>
+
+  <details>
+    <summary>Voir le code du cours (diapositives 30 à 32)</summary>
+<pre class="code">scaler = MinMaxScaler()
+scaler.fit(X_train)                 # apprentissage sur l'entraînement uniquement
+X_train_scaled = scaler.transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+transformer = PowerTransformer(method='yeo-johnson')
+transformer.fit(X_train)</pre>
+  </details>
+</section>
+
+<!-- ============ SCÈNE 5 : INGÉNIERIE DES VARIABLES ============ -->
+<section class="scene" data-title="Ingénierie des variables">
+  <div class="chapter">Mission 5 · Ingénierie des variables</div>
+  <h1>Transformer des indices bruts en variables utiles</h1>
+  <p class="story">Le modèle ne sait pas lire le mot « Khezama ». Et un horodatage cache l'heure de la journée, qui peut peser lourd sur la durée de livraison. Sami fournit au modèle de meilleurs indices.</p>
+
+  <div class="row">
+    <div class="card">
+      <h2>Encoder une catégorie</h2>
+      <div class="toggle">
+        <button class="btn enc" data-enc="oh">Encodage one-hot</button>
+        <button class="btn alt enc" data-enc="lab">Encodage par étiquette</button>
+      </div>
+      <div id="encTable"></div>
+      <p class="stat" id="encText"></p>
+    </div>
+
+    <div class="card">
+      <h2>Décomposer un horodatage</h2>
+      <p class="stat">Horodatage : <code>2022-01-01 01:00:00</code></p>
+      <button class="btn" id="btnDate">Décomposer en variables</button>
+      <div id="dateOut" style="margin-top:10px"></div>
+      <div class="note">La décomposition transforme une variable complexe en plusieurs variables simples que le modèle peut exploiter. L'agrégation fonctionne de la même façon : des statistiques résumées (moyenne, min, max) par groupe deviennent de nouvelles variables.</div>
+    </div>
+  </div>
+
+  <details>
+    <summary>Voir le code du cours (diapositives 35, 36 et 40)</summary>
+<pre class="code">pd.get_dummies(df['color'], prefix='color')          # one-hot
+LabelEncoder().fit_transform(df['grade'])           # étiquette
+df['date'] = pd.to_datetime(df['date'])
+df['hour'] = df['date'].dt.hour</pre>
+  </details>
+</section>
+
+<!-- ============ SCÈNE 6 : RÉDUCTION DE DIMENSION ============ -->
+<section class="scene" data-title="Réduction de dimension">
+  <div class="chapter">Mission 6 · Réduction de dimension</div>
+  <h1>Moins de variables, la même histoire</h1>
+  <p class="story">Sami dispose de trop de variables corrélées. Deux moyens existent pour les réduire : choisir les meilleures variables existantes (sélection) ou créer de nouvelles variables compactes (projection). Essayez les deux.</p>
+
+  <div class="card">
+    <div class="toggle">
+      <button class="btn dr" data-dr="sel">Sélection de variables</button>
+      <button class="btn alt dr" data-dr="proj">Projection de variables (ACP)</button>
+    </div>
+
+    <div id="drSel">
+      <p class="stat">Conservez les variables d'origine les plus informatives. Les importances ci-dessous sont illustratives, comme celles d'un arbre de décision.</p>
+      <div class="feat-row" data-imp="0.46"><span class="nm">distance_km</span><span class="bg"><i></i></span></div>
+      <div class="feat-row" data-imp="0.08"><span class="nm">driver_age</span><span class="bg"><i></i></span></div>
+      <div class="feat-row" data-imp="0.31"><span class="nm">zone</span><span class="bg"><i></i></span></div>
+      <div class="feat-row" data-imp="0.15"><span class="nm">hour</span><span class="bg"><i></i></span></div>
+      <p class="stat">En gardant les 2 meilleures variables : distance_km et zone.</p>
+    </div>
+
+    <div id="drProj" style="display:none">
+      <p class="stat">Quarante livraisons décrites par deux variables corrélées. L'ACP trouve la direction où elles varient le plus (CP1).</p>
+      <canvas id="pcaC"></canvas>
+      <div class="toggle">
+        <button class="btn" id="btnProj">Projeter sur CP1</button>
+        <button class="btn alt" id="btnBack">Revenir aux points d'origine</button>
+      </div>
+      <p class="stat" id="pcaText"></p>
+      <div class="meter"><i id="varBar" style="background:var(--accent2)"></i></div>
+      <p class="stat">La barre indique la variance conservée par CP1. Le seuil de 98 % du cours se trouve à droite de la piste.</p>
+    </div>
+  </div>
+
+  <details>
+    <summary>Voir le code du cours (diapositives 47, 48, 50 et 51)</summary>
+<pre class="code">rfe = RFE(LogisticRegression(), n_features_to_select=2)
+clf = DecisionTreeClassifier().fit(X, y)
+print(clf.feature_importances_)
+
+# Étapes de l'ACP : centrer-réduire, covariance, décomposition en
+# valeurs propres, garder D composantes dont le ratio cumulé dépasse le seuil
+from sklearn.decomposition import PCA</pre>
+  </details>
+</section>
+
+<!-- ============ SCÈNE 7 : L'IMAGE EST UNE MATRICE ============ -->
+<section class="scene" data-title="L'image est une matrice">
+  <div class="chapter">Mission 7 · Vision par ordinateur</div>
+  <h1>Une image est une matrice de nombres</h1>
+  <p class="story">L'équipe véhicules et animaux de Fennec Express a besoin d'un classifieur qui répond à une question pour chaque photo : est-ce une voiture, un chat ou un chien ? Avant qu'un modèle puisse répondre, Sami doit savoir ce que voit réellement un ordinateur.</p>
+
+  <div class="card">
+    <p>Chaque image est une grille de <strong>pixels</strong>. Un pixel couleur contient trois nombres : <strong>rouge, vert et bleu</strong>, chacun entre 0 et 255. Survolez l'image pour lire un pixel. L'image ci-dessous fait 24 × 24 pixels, agrandie pour que vous voyiez les carrés.</p>
+    <div class="toggle">
+      <button class="btn cls7" data-c7="voiture">Voiture</button>
+      <button class="btn alt cls7" data-c7="chat">Chat</button>
+      <button class="btn alt cls7" data-c7="chien">Chien</button>
+      <button class="btn alt" id="btnNext7">Photo suivante</button>
+    </div>
+    <div class="row">
+      <div>
+        <canvas id="showC" class="showc"></canvas>
+        <p class="stat" id="pixInfo">Survolez l'image pour lire un pixel.</p>
+      </div>
+      <div>
+        <p class="stat">Afficher un canal sous forme de matrice (valeurs de 0 à 255) :</p>
+        <div class="toggle">
+          <button class="btn chb" data-ch="R">Rouge</button>
+          <button class="btn alt chb" data-ch="G">Vert</button>
+          <button class="btn alt chb" data-ch="B">Bleu</button>
+          <button class="btn alt chb" data-ch="Gray">Niveaux de gris</button>
+        </div>
+        <div id="chTable" class="scrollx"></div>
+      </div>
+    </div>
+    <p class="stat" id="shapeInfo"></p>
+  </div>
+
+  <div class="note"><strong>Vue matricielle :</strong> une image couleur de 24 × 24 est trois matrices de 24 × 24 empilées (rouge, vert, bleu), soit 1 728 nombres. En niveaux de gris, il ne reste qu'une matrice de 576 nombres. Une vraie photo de téléphone contient des millions de valeurs : c'est pourquoi les missions suivantes résument l'image par des caractéristiques.</div>
+
+  <details>
+    <summary>Voir le code de cette étape</summary>
+<pre class="code">from PIL import Image
+import numpy as np
+
+img = np.array(Image.open('voiture.jpg'))        # forme (hauteur, largeur, 3)
+print(img.shape)                                 # par exemple (24, 24, 3)
+rouge = img[:, :, 0]                             # la matrice du rouge
+gris = np.array(Image.open('voiture.jpg').convert('L'))   # une seule matrice</pre>
+  </details>
+</section>
+
+<!-- ============ SCÈNE 8 : EXTRACTION DE CARACTÉRISTIQUES ============ -->
+<section class="scene" data-title="Extraction de caractéristiques">
+  <div class="chapter">Mission 8 · Extraction de caractéristiques</div>
+  <h1>Décrire chaque photo par la couleur, la forme et la texture</h1>
+  <p class="story">Les pixels bruts sont difficiles à exploiter directement. Sami extrait la description qu'un humain utiliserait : quelles couleurs dominent, quel contour dessine le sujet principal, et à quoi ressemble la surface.</p>
+
+  <div class="card">
+    <div class="toggle">
+      <button class="btn cls8" data-c8="voiture">Voiture</button>
+      <button class="btn alt cls8" data-c8="chat">Chat</button>
+      <button class="btn alt cls8" data-c8="chien">Chien</button>
+      <button class="btn alt" id="btnNext8">Photo suivante</button>
+    </div>
+    <div class="toggle" style="align-items:flex-end">
+      <div><p class="stat">Originale</p><canvas id="origC" class="smallc"></canvas></div>
+      <div><p class="stat">Masque du sujet (forme)</p><canvas id="maskC" class="smallc"></canvas></div>
+      <div><p class="stat">Contours (texture)</p><canvas id="edgeC" class="smallc"></canvas></div>
+    </div>
+    <p class="stat" id="extraInfo"></p>
+    <div class="cards3">
+      <div class="subcard" id="colorF"></div>
+      <div class="subcard" id="shapeF"></div>
+      <div class="subcard" id="texF"></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Trois familles de caractéristiques :</strong>
+    <strong>la couleur</strong> répond à la question « quelles couleurs ? » (moyennes rouge, vert, bleu, saturation) ;
+    <strong>la forme</strong> répond à « où est le sujet et quel est son contour ? » (le masque montre les pixels qui diffèrent du fond, d'où la surface, le rapport d'aspect et la longueur du contour) ;
+    <strong>la texture</strong> répond à « la surface est-elle chargée ? » (contraste, densité de contours et entropie des niveaux de gris).
+  </div>
+
+  <div class="card">
+    <h2>Le jeu de données de caractéristiques</h2>
+    <p class="stat" id="dsInfo"></p>
+    <div id="dsTable" style="overflow-x:auto"></div>
+    <p class="stat">Aperçu du CSV :</p>
+    <pre class="code" id="csvPreview"></pre>
+    <button class="btn" id="btnDownload">Télécharger image_features.csv</button>
+  </div>
+
+  <details>
+    <summary>Voir le code de cette étape</summary>
+<pre class="code">import numpy as np
+import pandas as pd
+
+rgb = img.astype(float)                       # forme (24, 24, 3)
+gris = rgb @ np.array([0.299, 0.587, 0.114])  # forme (24, 24)
+
+# caractéristiques de couleur
+mean_R, mean_G, mean_B = rgb.mean(axis=(0, 1)) / 255
+
+# caractéristiques de forme : pixels différents de la couleur du fond
+fond = np.concatenate([rgb[0], rgb[-1], rgb[:, 0], rgb[:, -1]]).mean(axis=0)
+masque = np.linalg.norm(rgb - fond, axis=2) &gt; 60
+area_frac = masque.mean()
+
+# caractéristiques de texture
+densite_contours = (np.abs(np.diff(gris, axis=1)) &gt; 40).mean()
+
+ligne = {'mean_R': mean_R, 'area_frac': area_frac, 'edge_density': densite_contours}
+pd.DataFrame([ligne]).to_csv('image_features.csv', index=False)</pre>
+  </details>
+</section>
+
+<!-- ============ SCÈNE 9 : SÉLECTION POUR LES IMAGES ============ -->
+<section class="scene" data-title="Sélection de caractéristiques d'image">
+  <div class="chapter">Mission 9 · Sélection de caractéristiques d'image</div>
+  <h1>Garder les caractéristiques qui distinguent voiture, chat et chien</h1>
+  <p class="story">Chaque photo possède maintenant quatorze caractéristiques. Certaines sont des doublons exprimés dans une autre unité, et une reste constante car toutes les photos sont entièrement opaques. Sami applique les étapes de sélection vues plus tôt dans le cours et garde les caractéristiques qui séparent les trois classes.</p>
+
+  <div class="card">
+    <div id="selTable" style="overflow-x:auto"></div>
+    <div class="toggle" style="margin-top:12px">
+      <button class="btn fix" data-sel="1">1 · Supprimer les caractéristiques quasi constantes</button>
+      <button class="btn fix" data-sel="2">2 · Supprimer les caractéristiques redondantes (|r| &gt; 0,95)</button>
+      <button class="btn fix" data-sel="3">3 · Garder les 5 meilleures par séparation des classes</button>
+      <button class="btn alt" id="btnSelReset">Réinitialiser la sélection</button>
+    </div>
+    <p class="stat" id="selInfo"></p>
+    <p class="stat" id="selCount"></p>
+  </div>
+
+  <div class="card">
+    <h2>Caractéristiques retenues au format CSV</h2>
+    <pre class="code" id="selCSV"></pre>
+    <button class="btn" id="btnSelDownload">Télécharger selected_features.csv</button>
+  </div>
+
+  <div class="note"><strong>Séparation des classes (η²)</strong> est la part de la variance d'une caractéristique expliquée par l'étiquette (voiture, chat ou chien). Un score élevé signifie que la caractéristique aide à distinguer les classes. Évaluer chaque caractéristique seule, avant d'entraîner un modèle, est une méthode de filtrage, comme le SelectKBest basé sur l'ANOVA de scikit-learn.</div>
+
+  <details>
+    <summary>Voir le code de cette étape</summary>
+<pre class="code">from sklearn.feature_selection import VarianceThreshold, SelectKBest, f_classif
+
+X = VarianceThreshold(threshold=1e-3).fit_transform(X)    # quasi constantes
+corr = X.corr().abs()
+upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(bool))
+a_supprimer = [c for c in upper.columns if any(upper[c] &gt; 0.95)]
+X = X.drop(columns=a_supprimer)                            # redondantes
+
+selector = SelectKBest(f_classif, k=5).fit(X, y)            # les 5 meilleures
+X_selected = selector.transform(X)</pre>
+  </details>
+</section>
+
+<!-- ============ SCÈNE 10 : FINALE ============ -->
+<section class="scene" data-title="Épilogue">
+  <div class="chapter">Épilogue · Mission accomplie</div>
+  <h1>Le modèle est prêt à apprendre</h1>
+  <p class="story">Sami transmet le jeu de données préparé à l'équipe de modélisation. Avant de fermer l'ordinateur, Sami relit une dernière fois les objectifs du chapitre.</p>
+
+  <div class="card">
+    <label class="check"><input type="checkbox"><span>Expliquer ce qu'est la préparation des données et sa place dans le workflow de ML</span></label>
+    <label class="check"><input type="checkbox"><span>Découvrir et profiler un jeu de données pour en comprendre la structure et les problèmes</span></label>
+    <label class="check"><input type="checkbox"><span>Nettoyer les données : valeurs manquantes, doublons, erreurs et valeurs aberrantes</span></label>
+    <label class="check"><input type="checkbox"><span>Transformer les données : mettre à l'échelle les variables et remodeler les distributions</span></label>
+    <label class="check"><input type="checkbox"><span>Créer des caractéristiques et réduire la dimension par sélection et projection</span></label>
+    <label class="check"><input type="checkbox"><span>Séparer correctement les données avant toute étape de préparation</span></label>
+    <label class="check"><input type="checkbox"><span>Transformer des images en tableaux de caractéristiques (DataFrame ou CSV) par transformation et extraction</span></label>
+    <p class="finale" id="finaleText"></p>
+  </div>
+
+  <div class="note"><strong>À retenir :</strong> profilez d'abord, séparez avant de préparer, ajustez les transformations uniquement sur l'entraînement et ne gardez que les caractéristiques qui portent du signal.</div>
+  <p class="stat">D'après le chapitre 2, Préparation des données (Noura Aboudi, PhD).</p>
+</section>
+
+</main>
+
+<div class="nav">
+  <button class="btn alt" id="prevBtn">← Retour</button>
+  <button class="btn" id="nextBtn">Suivant →</button>
+</div>
+
+<script>
+/* ---------- navigation ---------- */
+const scenes=[...document.querySelectorAll('.scene')];
+const dotsEl=document.getElementById('dots');
+const prevBtn=document.getElementById('prevBtn');
+const nextBtn=document.getElementById('nextBtn');
+let cur=0;
+
+scenes.forEach((s,i)=>{
+  const d=document.createElement('button');
+  d.className='dot';
+  d.title=s.dataset.title;
+  d.setAttribute('aria-label','Aller à : '+s.dataset.title);
+  d.onclick=()=>go(i);
+  dotsEl.appendChild(d);
+});
+
+function go(i){
+  cur=Math.max(0,Math.min(scenes.length-1,i));
+  scenes.forEach((s,k)=>s.classList.toggle('on',k===cur));
+  [...dotsEl.children].forEach((d,k)=>{d.classList.toggle('on',k===cur);d.classList.toggle('done',k<cur);});
+  prevBtn.disabled=cur===0;
+  nextBtn.textContent=cur===scenes.length-1?'Recommencer ↺':'Suivant →';
+  if(cur===6) sizeCanvas();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+prevBtn.onclick=()=>go(cur-1);
+nextBtn.onclick=()=>{ if(cur===scenes.length-1){ resetAll(); go(0);} else go(cur+1); };
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight') go(cur+1);
+  if(e.key==='ArrowLeft') go(cur-1);
+});
+
+/* ---------- utilitaires ---------- */
+const raw=[
+  {age:24,dist:3.2,min:18,zone:'Sousse Centre'},
+  {age:31,dist:5.8,min:27,zone:'Khezama'},
+  {age:-5,dist:4.1,min:22,zone:'Sahloul'},
+  {age:28,dist:null,min:31,zone:'Sousse Centre'},
+  {age:45,dist:2.4,min:15,zone:'Kalaa Kebira'},
+  {age:24,dist:3.2,min:18,zone:'Sousse Centre'},
+  {age:39,dist:7.9,min:300,zone:'Hammam Sousse'},
+  {age:33,dist:6.1,min:34,zone:'Khezama'}
+];
+const fresh=()=>raw.map(r=>({...r,fixed:{},gone:false}));
+const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+const stdev=a=>{const m=mean(a);return Math.sqrt(mean(a.map(v=>(v-m)**2)));};
+const fr=n=>String(n).replace('.',',');
+function quantile(arr,q){
+  const s=[...arr].sort((a,b)=>a-b);
+  const pos=(s.length-1)*q, lo=Math.floor(pos), hi=Math.ceil(pos);
+  return s[lo]+(s[hi]-s[lo])*(pos-lo);
+}
+const clamp=(v,a=2,b=98)=>Math.max(a,Math.min(b,v));
+
+function findIssues(rows){
+  const live=rows.filter(r=>!r.gone);
+  const seen=new Set(), dup=new Set();
+  live.forEach(r=>{
+    const k=[r.age,r.dist,r.min,r.zone].join('|');
+    if(seen.has(k)) dup.add(r); else seen.add(k);
+  });
+  const missing=live.filter(r=>r.dist===null);
+  const badAge=live.filter(r=>r.age<0);
+  const mins=live.map(r=>r.min);
+  const q1=quantile(mins,.25), q3=quantile(mins,.75), iqr=q3-q1;
+  const lo=q1-1.5*iqr, hi=q3+1.5*iqr;
+  const outliers=live.filter(r=>r.min<lo||r.min>hi);
+  return {live,dup,missing,badAge,outliers,lo,hi};
+}
+
+function drawTable(el,rows,showIssues){
+  const iss=findIssues(rows);
+  let h='<table><thead><tr><th>driver_age</th><th>distance_km</th><th>delivery_min</th><th>zone</th></tr></thead><tbody>';
+  rows.forEach(r=>{
+    const isDup=showIssues&&iss.dup.has(r);
+    const cell=(v,bad,fixed)=>`<td class="${showIssues&&bad?'bad':''} ${fixed?'fixed':''}">${v===null?'—':v}</td>`;
+    const isOut=showIssues&&iss.outliers.includes(r);
+    h+=`<tr class="${r.gone?'gone':''}">`
+      +cell(r.age,r.age<0,r.fixed.age)
+      +cell(r.dist,r.dist===null,r.fixed.dist)
+      +cell(r.min,isOut,false)
+      +`<td>${r.zone}${isDup?'<span class="tag">doublon</span>':''}</td></tr>`;
+  });
+  el.innerHTML=h+'</tbody></table>';
+}
+
+function histo(el,labelEl,vals){
+  const bins=7,w=50;
+  const counts=Array(bins).fill(0);
+  vals.forEach(v=>{const b=Math.min(bins-1,Math.floor(v/w));counts[b]++;});
+  const max=Math.max(1,...counts);
+  el.innerHTML=counts.map(c=>`<div class="bar" style="height:${c/max*100}%"><b>${c}</b></div>`).join('');
+  labelEl.innerHTML=counts.map((_,i)=>`<div>${i*w}–${(i+1)*w}</div>`).join('');
+}
+
+/* ---------- Mission 1 ---------- */
+let discRows=fresh();
+document.getElementById('btnDiag').onclick=()=>{
+  drawTable(document.getElementById('discTable'),discRows,true);
+  const i=findIssues(discRows);
+  document.getElementById('discSummary').textContent=
+    `${i.live.length} lignes · ${i.missing.length} distance(s) manquante(s) · ${i.dup.size} doublon · ${i.badAge.length} âge impossible · ${i.outliers.length} temps de livraison extrême(s)`;
+};
+document.getElementById('btnHist').onclick=()=>{
+  const live=discRows.filter(r=>!r.gone).map(r=>r.min);
+  histo(document.getElementById('discHist'),document.getElementById('discLabels'),live);
+  document.getElementById('discStats').textContent=
+    `delivery_min · effectif ${live.length} · moyenne ${fr(mean(live).toFixed(1))} · min ${Math.min(...live)} · max ${Math.max(...live)}. La moyenne est tirée vers le haut par une seule valeur extrême.`;
+};
+
+/* ---------- Mission 2 ---------- */
+let cleanRows=fresh();
+const done=new Set();
+function renderClean(){
+  drawTable(document.getElementById('cleanTable'),cleanRows,true);
+  const i=findIssues(cleanRows);
+  const remaining=i.dup.size+i.missing.length+i.badAge.length+i.outliers.length;
+  document.getElementById('healthBar').style.width=(done.size/4*100)+'%';
+  document.getElementById('healthText').textContent=`Santé des données : ${done.size}/4 corrections appliquées · ${remaining} cellule(s) ou ligne(s) à problème restante(s)`;
+  document.querySelectorAll('[data-fix]').forEach(b=>b.disabled=done.has(b.dataset.fix));
+  document.getElementById('cleanNote').textContent=
+    remaining===0?'Toutes les données sont propres. Elles sont prêtes à être explorées et modélisées.':'';
+}
+function markGone(list){
+  list.forEach(r=>r.gone=true);
+  renderClean();
+  setTimeout(()=>{cleanRows=cleanRows.filter(r=>!r.gone);renderClean();},480);
+}
+document.querySelectorAll('[data-fix]').forEach(b=>b.onclick=()=>{
+  const kind=b.dataset.fix;
+  const iss=findIssues(cleanRows);
+  if(kind==='dup') markGone([...iss.dup]);
+  if(kind==='miss'){
+    const med=quantile(iss.live.filter(r=>r.dist!==null).map(r=>r.dist),.5);
+    iss.missing.forEach(r=>{r.dist=med;r.fixed.dist=true;});
+  }
+  if(kind==='age'){
+    const med=quantile(iss.live.filter(r=>r.age>=0).map(r=>r.age),.5);
+    iss.badAge.forEach(r=>{r.age=med;r.fixed.age=true;});
+  }
+  if(kind==='out') markGone(iss.outliers);
+  done.add(kind);
+  renderClean();
+});
+
+/* ---------- Mission 3 ---------- */
+function splitData(){
+  const idx=[...Array(10).keys()].sort(()=>Math.random()-.5);
+  const tr=document.getElementById('trainBox'), te=document.getElementById('testBox');
+  document.getElementById('pool').innerHTML='';
+  tr.innerHTML=''; te.innerHTML='';
+  idx.forEach((k,j)=>{
+    const c=document.createElement('span');
+    c.className='chip '+(j<8?'tr':'te');
+    c.style.animationDelay=(j*0.06)+'s';
+    c.textContent='ligne '+(k+1);
+    (j<8?tr:te).appendChild(c);
+  });
+}
+function showPool(){
+  const p=document.getElementById('pool');
+  p.innerHTML='';
+  for(let k=1;k<=10;k++){const c=document.createElement('span');c.className='chip pool';c.textContent='ligne '+k;p.appendChild(c);}
+}
+document.getElementById('btnSplit').onclick=splitData;
+document.getElementById('btnShuffle').onclick=splitData;
+document.getElementById('btnGood').onclick=()=>{
+  document.getElementById('leakText').textContent='✓ Le scaler apprend le min, le max et la moyenne uniquement sur les 8 lignes d\'entraînement. Les 2 lignes de test sont transformées avec ces mêmes valeurs : l\'ensemble de test reste un examen équitable.';
+};
+document.getElementById('btnBad').onclick=()=>{
+  document.getElementById('leakText').textContent='✗ Les lignes de test ont influencé les statistiques du scaler. Le modèle a déjà aperçu une partie de son examen, donc son score de test paraîtra meilleur qu\'il ne l\'est réellement. C\'est une fuite de données (data leakage).';
+};
+
+/* ---------- Mission 4 : mise à l'échelle ---------- */
+const X=[900,1500,2200,3100,4000,4800,5600,12000];
+const Y=[2.1,3.4,2.8,4.5,3.9,1.8,4.2,3.0];
+const scalePlot=document.getElementById('scalePlot');
+const pts=X.map(()=>{const p=document.createElement('div');p.className='pt';scalePlot.appendChild(p);return p;});
+const scaleNotes={
+  orig:'Unités d\'origine : la valeur de 12 000 étire l\'axe, les autres points se resserrent.',
+  mm:'Min-Max : toutes les valeurs sont dans [0, 1]. La valeur aberrante fixe toujours l\'échelle, donc les autres points sont compressés vers la gauche.',
+  std:'Standard : centrés sur une moyenne de 0 avec une dispersion unitaire. Les points gardent leurs positions relatives, et la valeur aberrante se situe à environ deux écarts-types.'
+};
+function placeScale(mode){
+  const minX=Math.min(...X),maxX=Math.max(...X),minY=Math.min(...Y),maxY=Math.max(...Y);
+  const mX=mean(X),sX=stdev(X),mY=mean(Y),sY=stdev(Y);
+  pts.forEach((p,i)=>{
+    let xp,yp;
+    if(mode==='orig'){xp=X[i]/12000*100;yp=Y[i]/5*100;}
+    else if(mode==='mm'){xp=(X[i]-minX)/(maxX-minX)*100;yp=(Y[i]-minY)/(maxY-minY)*100;}
+    else{xp=((X[i]-mX)/sX+2)/5*100;yp=((Y[i]-mY)/sY+2)/5*100;}
+    p.style.left=clamp(xp)+'%';
+    p.style.top=(100-clamp(yp))+'%';
+  });
+  document.getElementById('scaleText').textContent=scaleNotes[mode];
+  document.querySelectorAll('.sc').forEach(b=>b.classList.toggle('alt',b.dataset.mode!==mode));
+}
+document.querySelectorAll('.sc').forEach(b=>b.onclick=()=>placeScale(b.dataset.mode));
+
+/* ---------- Mission 4 : asymétrie ---------- */
+const skewVals=[1,1.2,1.4,1.5,1.6,1.8,2,2.1,2.4,2.6,3,3.2,3.5,4,4.4,5,6,7,8.5,10,13,17,22,30];
+const lam=document.getElementById('lam');
+function skewSim(){
+  const s=+lam.value, L=1-s/100;
+  const t=skewVals.map(x=>L<1e-9?Math.log(x):(Math.pow(x,L)-1)/L);
+  const lo=Math.min(...t),hi=Math.max(...t),B=10,c=Array(B).fill(0);
+  t.forEach(v=>{let b=Math.floor((v-lo)/(hi-lo+1e-12)*B);if(b>=B)b=B-1;c[b]++;});
+  const mx=Math.max(...c);
+  document.getElementById('skewBars').innerHTML=c.map(n=>`<div class="bar" style="height:${n/mx*100}%;background:var(--accent)"></div>`).join('');
+  const m=mean(t), sd=stdev(t)||1;
+  const sk=mean(t.map(v=>((v-m)/sd)**3));
+  document.getElementById('lamText').textContent=`Paramètre de puissance λ = ${fr(L.toFixed(2))} ${L<1e-9?'(logarithme)':''}`;
+  document.getElementById('skewText').textContent=`Asymétrie : ${fr(sk.toFixed(2))} · ${Math.abs(sk)<0.5?'à peu près symétrique : moyenne et médiane sont proches':'toujours asymétrique : la longue queue tire la moyenne vers la droite'}`;
+}
+lam.oninput=skewSim;
+
+/* ---------- Mission 5 ---------- */
+const sampleZones=['Khezama','Sahloul','Sousse Centre','Khezama','Kalaa Kebira'];
+const cats=[...new Set(sampleZones)].sort();
+function renderEnc(mode){
+  const el=document.getElementById('encTable');
+  let h='<table><thead><tr>';
+  if(mode==='oh'){
+    h+='<th>zone</th>'+cats.map(c=>`<th>zone_${c}</th>`).join('')+'</tr></thead><tbody>';
+    sampleZones.forEach(z=>{h+=`<tr><td>${z}</td>`+cats.map(c=>`<td>${z===c?1:0}</td>`).join('')+'</tr>';});
+    document.getElementById('encText').textContent='Une colonne binaire par catégorie. Aucun ordre artificiel n\'est imposé, mais le tableau s\'élargit avec le nombre de catégories.';
+  }else{
+    h+='<th>zone</th><th>zone_code</th></tr></thead><tbody>';
+    sampleZones.forEach(z=>{h+=`<tr><td>${z}</td><td>${cats.indexOf(z)}</td></tr>`;});
+    document.getElementById('encText').textContent='Un nombre par catégorie. C\'est compact, mais le modèle peut croire que Sousse Centre (2) vaut « plus » que Khezama (0). À réserver aux données ordinales.';
+  }
+  el.innerHTML=h+'</tbody></table>';
+  document.querySelectorAll('.enc').forEach(b=>b.classList.toggle('alt',b.dataset.enc!==mode));
+}
+document.querySelectorAll('.enc').forEach(b=>b.onclick=()=>renderEnc(b.dataset.enc));
+document.getElementById('btnDate').onclick=()=>{
+  const out=document.getElementById('dateOut');
+  const parts=['année 2022','mois 1','jour 1','heure 1'];
+  out.innerHTML=parts.map((p,i)=>`<span class="chip feat pop" style="animation-delay:${i*0.25}s">${p}</span>`).join('');
+};
+
+/* ---------- Mission 6 ---------- */
+document.querySelectorAll('.dr').forEach(b=>b.onclick=()=>{
+  const sel=b.dataset.dr==='sel';
+  document.getElementById('drSel').style.display=sel?'block':'none';
+  document.getElementById('drProj').style.display=sel?'none':'block';
+  document.querySelectorAll('.dr').forEach(x=>x.classList.toggle('alt',x!==b));
+  if(sel) runSelection();
+  else sizeCanvas();
+});
+function runSelection(){
+  const rows=[...document.querySelectorAll('.feat-row')];
+  const sorted=[...rows].sort((a,b)=>b.dataset.imp-a.dataset.imp);
+  rows.forEach(r=>{r.classList.remove('keep');r.querySelector('i').style.width='0';});
+  setTimeout(()=>rows.forEach(r=>r.querySelector('i').style.width=(r.dataset.imp/0.5*100)+'%'),50);
+  sorted.slice(0,2).forEach(r=>r.classList.add('keep'));
+}
+
+const P=[];
+for(let i=0;i<40;i++){const t=(i-19.5)/8;P.push([t+0.15*Math.sin(i*2.1),0.7*t+0.15*Math.cos(i*1.3)]);}
+const nP=P.length;
+const pmx=P.reduce((s,p)=>s+p[0],0)/nP, pmy=P.reduce((s,p)=>s+p[1],0)/nP;
+let sxx=0,syy=0,sxy=0;
+P.forEach(([x,y])=>{sxx+=(x-pmx)**2;syy+=(y-pmy)**2;sxy+=(x-pmx)*(y-pmy);});
+sxx/=nP;syy/=nP;sxy/=nP;
+const tr=sxx+syy, det=sxx*syy-sxy*sxy, disc=Math.sqrt(tr*tr/4-det);
+const l1=tr/2+disc, l2=tr/2-disc;
+const theta=0.5*Math.atan2(2*sxy,sxx-syy);
+const ratio=l1/tr;
+const cs=Math.cos(theta), sn=Math.sin(theta);
+const Q=P.map(([x,y])=>{const s=(x-pmx)*cs+(y-pmy)*sn;return [pmx+s*cs,pmy+s*sn];});
+
+const pcaC=document.getElementById('pcaC');
+const ctx=pcaC.getContext('2d');
+const allX=[...P,...Q].map(p=>p[0]), allY=[...P,...Q].map(p=>p[1]);
+const bx0=Math.min(...allX),bx1=Math.max(...allX),by0=Math.min(...allY),by1=Math.max(...allY);
+let anim=0;
+function sizeCanvas(){
+  pcaC.width=pcaC.parentElement.clientWidth;
+  pcaC.height=300;
+  drawPCA(anim);
+}
+function drawPCA(t){
+  const W=pcaC.width,H=pcaC.height,m=30;
+  const X2=v=>m+(v-bx0)/(bx1-bx0)*(W-2*m);
+  const Y2=v=>H-m-(v-by0)/(by1-by0)*(H-2*m);
+  const style=getComputedStyle(document.documentElement);
+  const accent=style.getPropertyValue('--accent').trim()||'#e4572e';
+  const ink=style.getPropertyValue('--muted').trim()||'#5b6475';
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(128,128,128,.25)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(m,H-m);ctx.lineTo(W-m,H-m);ctx.moveTo(m,H-m);ctx.lineTo(m,m);ctx.stroke();
+  ctx.setLineDash([6,5]);ctx.strokeStyle=ink;ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(X2(pmx-3*cs),Y2(pmy-3*sn));ctx.lineTo(X2(pmx+3*cs),Y2(pmy+3*sn));ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle=ink;ctx.font='13px system-ui';
+  ctx.fillText('CP1',X2(pmx+3*cs)-20,Y2(pmy+3*sn)-8);
+  P.forEach((p,i)=>{
+    const x=p[0]*(1-t)+Q[i][0]*t, y=p[1]*(1-t)+Q[i][1]*t;
+    if(t>0){
+      ctx.strokeStyle='rgba(128,128,128,.35)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(X2(p[0]),Y2(p[1]));ctx.lineTo(X2(x),Y2(y));ctx.stroke();
+    }
+    ctx.fillStyle=accent;
+    ctx.beginPath();ctx.arc(X2(x),Y2(y),5,0,Math.PI*2);ctx.fill();
+  });
+}
+function animatePCA(to){
+  const from=anim, start=performance.now(), dur=900;
+  function step(now){
+    const k=Math.min(1,(now-start)/dur);
+    const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    anim=from+(to-from)*e;
+    drawPCA(anim);
+    if(k<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function updatePCAText(){
+  const D=ratio>=0.98?1:2;
+  document.getElementById('varBar').style.width=(ratio*100)+'%';
+  document.getElementById('pcaText').textContent=
+    `CP1 conserve ${fr((ratio*100).toFixed(1))} % de la variance. ${D===1?'Cela dépasse le seuil de 98 %, donc D = 1 suffit : chaque livraison devient un seul nombre au lieu de deux.':'C\'est en dessous de 98 %, donc on garde D = 2.'}`;
+}
+document.getElementById('btnProj').onclick=()=>animatePCA(1);
+document.getElementById('btnBack').onclick=()=>animatePCA(0);
+updatePCAText();
+window.addEventListener('resize',()=>{if(cur===6)sizeCanvas();});
+
+/* ---------- Missions 7–9 : vision par ordinateur ---------- */
+const CLASSES=['voiture','chat','chien'];
+const CLS_LABEL={voiture:'Voiture',chat:'Chat',chien:'Chien'};
+const SZ=24;
+const FEAT=['mean_R','mean_G','mean_B','mean_sat','mean_gray','mean_gray_pct','area_frac','aspect_ratio','perimeter_to_area','centroid_y','gray_std','edge_density','gray_entropy','alpha_mean'];
+const PAL={
+  voiture:['#c62828','#1565c0','#eeeeee','#2e2e2e','#f9a825','#6d4c41'],
+  chat:['#f08a24','#8a8a8a','#2b2b2b','#e9dcc6'],
+  chien:['#8b5a2b','#d9a54a','#3b2f2f','#f2f2f2']
+};
+
+/* générateur pseudo-aléatoire : chaque photo est identique à chaque chargement */
+function rngFrom(seed){let s=seed*9301+49297;return()=>{s=(s*9301+49297)%233280;return s/233280;};}
+
+/* outils de dessin */
+function rect(g,x,y,w,h,fill){g.fillStyle=fill;g.fillRect(x,y,w,h);}
+function circ(g,x,y,rad,fill){g.fillStyle=fill;g.beginPath();g.arc(x,y,rad,0,Math.PI*2);g.fill();}
+function ell(g,x,y,rx,ry,rot,fill){g.fillStyle=fill;g.beginPath();g.ellipse(x,y,rx,ry,rot,0,Math.PI*2);g.fill();}
+function tri(g,pts,fill){g.fillStyle=fill;g.beginPath();g.moveTo(pts[0][0],pts[0][1]);pts.slice(1).forEach(p=>g.lineTo(p[0],p[1]));g.closePath();g.fill();}
+
+function drawVoiture(g,col,r){
+  const dx=(r()-0.5)*10;
+  rect(g,0,0,96,66,'#9ecbff');
+  rect(g,0,66,96,30,'#7a7a7a');
+  rect(g,12+dx,48,72,20,col);
+  tri(g,[[28+dx,48],[38+dx,30],[60+dx,30],[72+dx,48]],col);
+  rect(g,40+dx,34,8,12,'#cfeeff');
+  rect(g,51+dx,34,9,12,'#cfeeff');
+  circ(g,30+dx,70,9,'#111');circ(g,70+dx,70,9,'#111');
+  circ(g,30+dx,70,4,'#bbbbbb');circ(g,70+dx,70,4,'#bbbbbb');
+}
+function drawChat(g,col,r){
+  const dx=(r()-0.5)*10;
+  rect(g,0,0,96,80,'#f3e9d2');
+  rect(g,0,80,96,16,'#c9a27a');
+  g.strokeStyle=col;g.lineWidth=7;g.lineCap='round';
+  g.beginPath();g.moveTo(74+dx,70);g.quadraticCurveTo(96,72,88+dx,40);g.stroke();
+  ell(g,50+dx,64,26,17,0,col);
+  tri(g,[[22+dx,32],[24+dx,10],[38+dx,26]],col);
+  tri(g,[[36+dx,26],[50+dx,10],[52+dx,30]],col);
+  ell(g,34+dx,42,17,15,0,col);
+  circ(g,28+dx,40,3.5,'#7dd87d');circ(g,40+dx,40,3.5,'#7dd87d');
+  circ(g,28+dx,40,1.5,'#111');circ(g,40+dx,40,1.5,'#111');
+  tri(g,[[32+dx,48],[36+dx,48],[34+dx,51]],'#e88aa0');
+  if(r()<0.6){rect(g,30+dx,28,2,8,'rgba(0,0,0,.35)');rect(g,36+dx,28,2,8,'rgba(0,0,0,.35)');}
+}
+function drawChien(g,col,r){
+  const dx=(r()-0.5)*10;
+  rect(g,0,0,96,80,'#d8ead0');
+  rect(g,0,80,96,16,'#8fbf7f');
+  g.strokeStyle=col;g.lineWidth=6;g.lineCap='round';
+  g.beginPath();g.moveTo(78+dx,58);g.quadraticCurveTo(94,50,88+dx,28);g.stroke();
+  rect(g,30+dx,70,7,16,col);rect(g,40+dx,70,7,16,col);
+  rect(g,58+dx,70,7,16,col);rect(g,68+dx,70,7,16,col);
+  ell(g,50+dx,62,28,15,0,col);
+  ell(g,20+dx,36,6,14,0.3,'rgba(0,0,0,.3)');
+  ell(g,48+dx,36,6,14,-0.3,'rgba(0,0,0,.3)');
+  ell(g,34+dx,42,17,16,0,col);
+  ell(g,22+dx,50,10,8,0,'#f5e6cf');
+  circ(g,12+dx,46,4,'#111');
+  circ(g,28+dx,38,3,'#111');
+}
+
+/* dessin de 96 px, puis réduction à 24 × 24 pixels */
+function makeSample(cls,i){
+  const r=rngFrom(CLASSES.indexOf(cls)*100+i+1);
+  const col=PAL[cls][Math.floor(r()*PAL[cls].length)];
+  const big=document.createElement('canvas');big.width=96;big.height=96;
+  const g=big.getContext('2d');
+  if(cls==='voiture')drawVoiture(g,col,r);else if(cls==='chat')drawChat(g,col,r);else drawChien(g,col,r);
+  const small=document.createElement('canvas');small.width=SZ;small.height=SZ;
+  const s=small.getContext('2d');s.imageSmoothingEnabled=true;s.imageSmoothingQuality='high';
+  s.drawImage(big,0,0,SZ,SZ);
+  return {cls,i,data:s.getImageData(0,0,SZ,SZ).data};
+}
+const samples=CLASSES.flatMap(c=>[0,1,2,3,4,5].map(i=>makeSample(c,i)));
+const sampleOf=(cls,i)=>samples.find(s=>s.cls===cls&&s.i===i);
+
+/* accès aux pixels et extraction de caractéristiques */
+function pxRGB(s,r,c){const k=(r*SZ+c)*4,d=s.data;return [d[k],d[k+1],d[k+2]];}
+function analyze(s){
+  const N=SZ*SZ;
+  const G=[];let sR=0,sG=0,sB=0,sSat=0,bR=0,bG=0,bB=0,nb=0;
+  for(let r=0;r<SZ;r++){G.push([]);for(let c=0;c<SZ;c++){
+    const [R,Gc,B]=pxRGB(s,r,c);
+    G[r].push(0.299*R+0.587*Gc+0.114*B);
+    sR+=R;sG+=Gc;sB+=B;
+    const mx=Math.max(R,Gc,B),mn=Math.min(R,Gc,B);
+    sSat+=mx?(mx-mn)/mx:0;
+    if(r===0||c===0||r===SZ-1||c===SZ-1){bR+=R;bG+=Gc;bB+=B;nb++;}
+  }}
+  const bg=[bR/nb,bG/nb,bB/nb];
+  const M=[];let fg=0,sumRow=0,minR=SZ,maxR=-1,minC=SZ,maxC=-1;
+  for(let r=0;r<SZ;r++){M.push([]);for(let c=0;c<SZ;c++){
+    const [R,Gc,B]=pxRGB(s,r,c);
+    const on=Math.hypot(R-bg[0],Gc-bg[1],B-bg[2])>60;
+    M[r].push(on);
+    if(on){fg++;sumRow+=r;minR=Math.min(minR,r);maxR=Math.max(maxR,r);minC=Math.min(minC,c);maxC=Math.max(maxC,c);}
+  }}
+  let bnd=0;
+  for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++){
+    if(!M[r][c])continue;
+    const touchesBg=[[r-1,c],[r+1,c],[r,c-1],[r,c+1]].some(([a,b])=>a<0||b<0||a>=SZ||b>=SZ||!M[a][b]);
+    if(touchesBg)bnd++;
+  }
+  const E=[];let edges=0;
+  for(let r=0;r<SZ;r++){E.push([]);for(let c=0;c<SZ;c++){
+    const gx=c<SZ-1?G[r][c+1]-G[r][c]:0;
+    const gy=r<SZ-1?G[r+1][c]-G[r][c]:0;
+    const on=Math.abs(gx)+Math.abs(gy)>40;
+    E[r].push(on);if(on)edges++;
+  }}
+  const flat=G.flat(),gm=mean(flat);
+  const bins=Array(8).fill(0);flat.forEach(v=>bins[Math.min(7,Math.floor(v/32))]++);
+  let H=0;bins.forEach(n=>{if(n){const p=n/N;H-=p*Math.log2(p);}});
+  const f={
+    mean_R:sR/N/255,mean_G:sG/N/255,mean_B:sB/N/255,
+    mean_sat:sSat/N,
+    mean_gray:gm/255,mean_gray_pct:gm/255*100,
+    area_frac:fg/N,
+    aspect_ratio:fg?(maxC-minC+1)/(maxR-minR+1):1,
+    perimeter_to_area:fg?bnd/fg:0,
+    centroid_y:fg?sumRow/fg/(SZ-1):0.5,
+    gray_std:stdev(flat)/255,
+    edge_density:edges/N,
+    gray_entropy:H/3,
+    alpha_mean:1
+  };
+  Object.keys(f).forEach(k=>f[k]=+f[k].toFixed(3));
+  return {f,M,E};
+}
+let dataset=samples.map(s=>({label:s.cls,f:analyze(s).f}));
+
+function csvOf(rows,feats){
+  return ['label,'+feats.join(','),...rows.map(r=>r.label+','+feats.map(f=>r.f[f]).join(','))].join('\n');
+}
+function download(name,text){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));
+  a.download=name;a.click();
+}
+function markActive(sel,key,val){
+  document.querySelectorAll(sel).forEach(b=>b.classList.toggle('alt',b.dataset[key]!==val));
+}
+
+/* Mission 7 : vue matricielle */
+let v7={cls:'voiture',i:0}, ch7='R', v8={cls:'voiture',i:0};
+function render7(){
+  const s=sampleOf(v7.cls,v7.i);
+  const c=document.getElementById('showC');
+  c.width=SZ;c.height=SZ;
+  c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(s.data),SZ,SZ),0,0);
+  const idx={R:0,G:1,B:2};
+  let h='<table class="pixmat"><tbody>';
+  for(let r=0;r<SZ;r++){
+    h+='<tr>';
+    for(let k=0;k<SZ;k++){
+      const [R,G,B]=pxRGB(s,r,k);
+      const v=ch7==='Gray'?Math.round(0.299*R+0.587*G+0.114*B):[R,G,B][idx[ch7]];
+      h+=`<td style="background:rgb(${v},${v},${v});color:${v<128?'#fff':'#000'}">${v}</td>`;
+    }
+    h+='</tr>';
+  }
+  document.getElementById('chTable').innerHTML=h+'</tbody></table>';
+  document.getElementById('shapeInfo').textContent=`Photo « ${CLS_LABEL[v7.cls]} » n°${v7.i+1} : 24 × 24 × 3 = 1 728 nombres en couleur, 576 en niveaux de gris.`;
+}
+
+/* Mission 8 : masques, contours et caractéristiques */
+function drawBool(id,fn){
+  const c=document.getElementById(id);c.width=SZ;c.height=SZ;
+  const g=c.getContext('2d');const img=g.createImageData(SZ,SZ);
+  for(let r=0;r<SZ;r++)for(let k=0;k<SZ;k++){
+    const v=fn(r,k)?255:0,p=(r*SZ+k)*4;
+    img.data[p]=v;img.data[p+1]=v;img.data[p+2]=v;img.data[p+3]=255;
+  }
+  g.putImageData(img,0,0);
+}
+function render8(){
+  const s=sampleOf(v8.cls,v8.i);
+  const a=analyze(s);
+  const oc=document.getElementById('origC');oc.width=SZ;oc.height=SZ;
+  oc.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(s.data),SZ,SZ),0,0);
+  drawBool('maskC',(r,k)=>a.M[r][k]);
+  drawBool('edgeC',(r,k)=>a.E[r][k]);
+  const grp=(name,list)=>`<h3 style="font-size:16px;margin:2px 0 6px">${name}</h3><table class="ft"><tbody>${list.map(k=>`<tr><td>${k}</td><td>${fr(a.f[k])}</td></tr>`).join('')}</tbody></table>`;
+  document.getElementById('colorF').innerHTML=grp('Couleur',['mean_R','mean_G','mean_B','mean_sat','mean_gray']);
+  document.getElementById('shapeF').innerHTML=grp('Forme',['area_frac','aspect_ratio','perimeter_to_area','centroid_y']);
+  document.getElementById('texF').innerHTML=grp('Texture',['gray_std','edge_density','gray_entropy']);
+  document.getElementById('extraInfo').textContent=`Photo « ${CLS_LABEL[v8.cls]} » n°${v8.i+1} : le sujet couvre ${(a.f.area_frac*100).toFixed(0)} % du cadre (en blanc sur le masque).`;
+}
+function renderDS8(){
+  document.getElementById('dsInfo').textContent=`${dataset.length} lignes × ${FEAT.length+1} colonnes (étiquette + ${FEAT.length} caractéristiques), 6 photos par classe`;
+  const shown=dataset.filter((_,k)=>k%6<2);
+  document.getElementById('dsTable').innerHTML=
+    '<table style="font-size:11px"><thead><tr><th>étiquette</th>'+FEAT.map(k=>`<th>${k}</th>`).join('')+'</tr></thead><tbody>'
+    +shown.map(r=>`<tr><td>${r.label}</td>`+FEAT.map(k=>`<td>${r.f[k]}</td>`).join('')+'</tr>').join('')
+    +'</tbody></table><p class="stat">Affichage de 2 photos sur 6 par classe.</p>';
+  document.getElementById('csvPreview').textContent=csvOf(dataset.slice(0,3),FEAT).split('\n').slice(0,4).join('\n')+'\n…';
+}
+
+/* Mission 9 : sélection de caractéristiques */
+let kept=[...FEAT], dropped={};
+const varOf=f=>stdev(dataset.map(d=>d.f[f]))**2;
+function corr(a,b){
+  const x=dataset.map(d=>d.f[a]),y=dataset.map(d=>d.f[b]);
+  const mx=mean(x),my=mean(y);
+  let sxy=0,sx=0,sy=0;
+  for(let i=0;i<x.length;i++){sxy+=(x[i]-mx)*(y[i]-my);sx+=(x[i]-mx)**2;sy+=(y[i]-my)**2;}
+  return sx&&sy?sxy/Math.sqrt(sx*sy):0;
+}
+function eta2(f){
+  const x=dataset.map(d=>d.f[f]),g=mean(x);
+  const sst=x.reduce((s,v)=>s+(v-g)**2,0);
+  let ssb=0;
+  CLASSES.forEach(c=>{
+    const xs=dataset.filter(d=>d.label===c).map(d=>d.f[f]);
+    if(xs.length)ssb+=xs.length*(mean(xs)-g)**2;
+  });
+  return sst?ssb/sst:0;
+}
+function renderSel(){
+  const rows=FEAT.map(f=>{
+    const st=dropped[f]?`<span style="color:var(--bad)">supprimée : ${dropped[f]}</span>`:'<span style="color:var(--good)">conservée</span>';
+    return `<tr><td>${f}</td><td>${fr(varOf(f).toFixed(4))}</td><td>${fr(eta2(f).toFixed(3))}</td><td>${st}</td></tr>`;
+  }).join('');
+  document.getElementById('selTable').innerHTML=
+    '<table><thead><tr><th>caractéristique</th><th>variance</th><th>séparation des classes η²</th><th>statut</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  document.getElementById('selInfo').textContent=`${FEAT.length} caractéristiques → ${kept.length} conservée(s)`;
+  document.getElementById('selCount').textContent=`Comparaison : une photo couleur contient 1 728 nombres bruts. Après extraction elle a ${FEAT.length} caractéristiques, et après sélection ${kept.length}.`;
+  const lines=csvOf(dataset,kept).split('\n');
+  document.getElementById('selCSV').textContent=lines.slice(0,4).join('\n')+(lines.length>4?'\n…':'');
+}
+function selStep(k){
+  if(k===1){
+    kept.filter(f=>varOf(f)<1e-3).forEach(f=>dropped[f]='quasi constante');
+    kept=kept.filter(f=>!dropped[f]);
+  }
+  if(k===2){
+    const keep=[];
+    kept.forEach(f=>{
+      const h=keep.find(g=>Math.abs(corr(f,g))>0.95);
+      if(h)dropped[f]=`doublon de ${h} (r = ${fr(corr(f,h).toFixed(2))})`;
+      else keep.push(f);
+    });
+    kept=keep;
+  }
+  if(k===3){
+    const ranked=[...kept].sort((a,b)=>eta2(b)-eta2(a));
+    const top=ranked.slice(0,5);
+    ranked.slice(5).forEach(f=>dropped[f]='séparation des classes trop faible');
+    kept=FEAT.filter(f=>top.includes(f));
+  }
+  renderSel();
+}
+
+/* câblage et réinitialisation */
+function resetVision(){
+  v7={cls:'voiture',i:0};ch7='R';v8={cls:'voiture',i:0};
+  markActive('.cls7','c7','voiture');
+  markActive('.chb','ch','R');
+  markActive('.cls8','c8','voiture');
+  render7();render8();
+  dataset=samples.map(s=>({label:s.cls,f:analyze(s).f}));
+  renderDS8();
+  kept=[...FEAT];dropped={};renderSel();
+}
+function initVision(){
+  document.querySelectorAll('.cls7').forEach(b=>b.onclick=()=>{v7={cls:b.dataset.c7,i:0};markActive('.cls7','c7',v7.cls);render7();});
+  document.getElementById('btnNext7').onclick=()=>{v7.i=(v7.i+1)%6;render7();};
+  document.querySelectorAll('.chb').forEach(b=>b.onclick=()=>{ch7=b.dataset.ch;markActive('.chb','ch',ch7);render7();});
+  document.getElementById('showC').onmousemove=e=>{
+    const b=e.currentTarget.getBoundingClientRect();
+    const x=Math.min(SZ-1,Math.floor((e.clientX-b.left)/b.width*SZ));
+    const y=Math.min(SZ-1,Math.floor((e.clientY-b.top)/b.height*SZ));
+    const [R,G,B]=pxRGB(sampleOf(v7.cls,v7.i),y,x);
+    document.getElementById('pixInfo').textContent=`pixel ligne ${y}, colonne ${x} : Rouge ${R} · Vert ${G} · Bleu ${B}`;
+  };
+  document.querySelectorAll('.cls8').forEach(b=>b.onclick=()=>{v8={cls:b.dataset.c8,i:0};markActive('.cls8','c8',v8.cls);render8();});
+  document.getElementById('btnNext8').onclick=()=>{v8.i=(v8.i+1)%6;render8();};
+  document.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>selStep(+b.dataset.sel));
+  document.getElementById('btnSelReset').onclick=()=>{kept=[...FEAT];dropped={};renderSel();};
+  document.getElementById('btnSelDownload').onclick=()=>download('selected_features.csv',csvOf(dataset,kept));
+  document.getElementById('btnDownload').onclick=()=>download('image_features.csv',csvOf(dataset,FEAT));
+  resetVision();
+}
+
+/* ---------- finale ---------- */
+document.querySelectorAll('.check input').forEach(c=>c.onchange=()=>{
+  const all=[...document.querySelectorAll('.check input')].every(x=>x.checked);
+  document.getElementById('finaleText').textContent=all?'Mission accomplie. Le modèle de livraison peut commencer à apprendre. 🎉':'';
+});
+
+/* ---------- réinitialisation ---------- */
+function resetAll(){
+  discRows=fresh();
+  document.getElementById('discTable').innerHTML='';
+  document.getElementById('discSummary').textContent='';
+  document.getElementById('discHist').innerHTML='';
+  document.getElementById('discLabels').innerHTML='';
+  document.getElementById('discStats').textContent='';
+  cleanRows=fresh();done.clear();renderClean();
+  showPool();
+  document.getElementById('trainBox').innerHTML='';
+  document.getElementById('testBox').innerHTML='';
+  document.getElementById('leakText').textContent='Choisissez une option pour voir ce qui arrive à l\'ensemble de test.';
+  placeScale('orig');
+  lam.value=0;skewSim();
+  renderEnc('oh');
+  document.getElementById('dateOut').innerHTML='';
+  document.querySelectorAll('.check input').forEach(c=>c.checked=false);
+  document.getElementById('finaleText').textContent='';
+  resetVision();
+}
+
+/* ---------- démarrage ---------- */
+drawTable(document.getElementById('discTable'),discRows,false);
+renderClean();
+showPool();
+placeScale('orig');
+skewSim();
+renderEnc('oh');
+initVision();
+go(0);
+</script>
+</body>
+</html>

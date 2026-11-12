@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sami and the Messy Dataset | Data Preparation</title>
+<style>
+:root{--bg:#fbf7f0;--card:#ffffff;--ink:#1d2433;--muted:#5b6475;--accent:#e4572e;--accent2:#17a398;--accent3:#f3a712;--bad:#d7263d;--good:#2e9e5b;--line:#e6dfd3;--code:#101520}
+@media (prefers-color-scheme: dark){:root{--bg:#141821;--card:#1d2330;--ink:#eef1f6;--muted:#9aa4b5;--line:#2c3444}}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:14px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+.brand{font-weight:700}
+.dots{display:flex;gap:8px;flex-wrap:wrap}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--line);border:0;cursor:pointer;padding:0;transition:all .3s}
+.dot.on{background:var(--accent);transform:scale(1.3)}
+.dot.done{background:var(--accent2)}
+main{max-width:980px;margin:0 auto;padding:28px 20px 110px}
+.scene{display:none}
+.scene.on{display:block;animation:rise .6s ease}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.chapter{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{font-size:clamp(28px,4vw,40px);margin:6px 0 10px;line-height:1.2}
+h2{font-size:22px;margin:4px 0 10px}
+.story{font-size:18px;border-left:4px solid var(--accent3);padding:4px 16px;margin:16px 0 22px;font-style:italic}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:16px 0;box-shadow:0 6px 20px rgba(0,0,0,.05)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.row{grid-template-columns:1fr}}
+.btn{background:var(--ink);color:var(--bg);border:0;padding:9px 16px;border-radius:999px;cursor:pointer;font-size:15px;margin:4px 6px 4px 0;transition:transform .15s,opacity .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+.btn.fix{background:var(--accent2);color:#fff}
+.btn:disabled{opacity:.35;cursor:default;transform:none}
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--line);display:flex;justify-content:space-between;padding:12px 20px}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:13px;color:var(--muted);font-weight:600}
+tr{transition:opacity .45s,transform .45s}
+tr.gone{opacity:0;transform:translateX(40px)}
+td{transition:background .5s}
+td.bad{background:rgba(215,38,61,.15);color:var(--bad);font-weight:600}
+td.fixed{background:rgba(46,158,91,.18);color:var(--good);font-weight:600}
+.tag{display:inline-block;background:var(--line);padding:1px 8px;border-radius:6px;font-size:12px;margin-left:6px;color:var(--muted)}
+.bars{display:flex;align-items:flex-end;gap:6px;height:180px;border-bottom:2px solid var(--line);padding:0 4px;margin-top:22px}
+.bar{flex:1;background:var(--accent2);border-radius:6px 6px 0 0;transition:height .8s cubic-bezier(.2,.8,.2,1);position:relative;min-height:0}
+.bar b{position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:12px;color:var(--muted);font-weight:600}
+.labels{display:flex;gap:6px;font-size:12px;color:var(--muted);padding:4px}
+.labels div{flex:1;text-align:center}
+.meter{height:14px;background:var(--line);border-radius:99px;overflow:hidden;margin:10px 0}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--bad),var(--accent3),var(--good));transition:width .8s}
+.plot{position:relative;height:280px;border-left:2px solid var(--line);border-bottom:2px solid var(--line);margin:14px 4px 6px}
+.pt{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--accent);transform:translate(-50%,-50%);transition:left .9s cubic-bezier(.2,.8,.2,1),top .9s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 0 3px rgba(228,87,46,.2)}
+.axis{position:absolute;font-size:12px;color:var(--muted)}
+.chip{display:inline-block;padding:6px 12px;border-radius:999px;color:#fff;font-size:14px;margin:4px;animation:pop .5s both}
+.chip.tr{background:#4f7cff}.chip.te{background:var(--accent3)}.chip.pool{background:var(--line);color:var(--ink);animation:none}
+.chip.feat{background:var(--accent2)}
+@keyframes pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+.box{flex:1;min-height:110px;border:2px dashed var(--line);border-radius:14px;padding:10px}
+.boxes{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}
+.pipe{position:relative;height:110px;margin:22px 0}
+.stage{position:absolute;top:20px;width:170px;padding:14px 8px;text-align:center;border-radius:14px;background:var(--bg);border:1px solid var(--line);font-size:14px;font-weight:600}
+.flow{position:absolute;top:44px;width:14px;height:14px;border-radius:50%;background:var(--accent3);animation:flow 3.5s linear infinite}
+@keyframes flow{from{left:0;opacity:0}8%{opacity:1}92%{opacity:1}to{left:calc(100% - 14px);opacity:0}}
+.code{background:var(--code);color:#e6edf7;border-radius:12px;padding:14px;font-size:13px;overflow-x:auto;font-family:ui-monospace,Consolas,monospace;white-space:pre;margin:10px 0 0}
+details{margin-top:14px}
+summary{cursor:pointer;color:var(--accent);font-weight:600}
+.note{background:rgba(23,163,152,.1);border-radius:12px;padding:12px 14px;margin-top:12px}
+.warn{background:rgba(215,38,61,.08);border-radius:12px;padding:12px 14px;margin-top:12px}
+.toggle{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.stat{font-size:15px;color:var(--muted);margin:8px 0}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.check input{margin-top:6px;width:18px;height:18px;accent-color:var(--good)}
+.finale{font-size:18px;font-weight:600;color:var(--good);min-height:28px}
+.pop{animation:pop .5s both}
+canvas{display:block;width:100%;height:300px}
+.feat-row{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:15px}
+.feat-row .nm{width:150px}
+.feat-row .bg{flex:1;height:12px;background:var(--line);border-radius:99px;overflow:hidden}
+.feat-row .bg i{display:block;height:100%;background:var(--accent2);width:0;transition:width .8s}
+.feat-row.keep .nm{font-weight:700;color:var(--good)}
+.pixgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;max-width:280px;margin:0 auto}
+.pixgrid div{aspect-ratio:1;border-radius:4px;cursor:pointer;transition:background .5s,transform .15s;border:1px solid rgba(128,128,128,.3)}
+.pixgrid div:hover{transform:scale(1.08)}
+.pixmat td{font-size:11px;padding:3px 5px;text-align:right;border:0}
+.flatrow{display:flex;gap:3px;overflow-x:auto;padding:12px 0;font-family:ui-monospace,Consolas,monospace;font-size:11px}
+.flatrow span{padding:3px 5px;border-radius:4px;background:var(--line);white-space:nowrap;animation:pop .4s both}
+.patb.alt{opacity:.7}
+.showc{width:240px;height:240px;image-rendering:pixelated;border-radius:12px;border:1px solid var(--line);display:block;cursor:crosshair}
+.smallc{width:150px;height:150px;image-rendering:pixelated;border-radius:10px;border:1px solid var(--line);display:block}
+.scrollx{overflow-x:auto;max-width:100%}
+.scrollx .pixmat td{font-size:9px;padding:1px 2px}
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.subcard{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px}
+.ft td{padding:4px 6px;border-bottom:1px solid var(--line);font-size:14px}
+.ft td:last-child{text-align:right;font-weight:600}
+@media (max-width:760px){.cards3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Sami &amp; the Messy Dataset</div>
+  <div class="dots" id="dots"></div>
+</header>
+
+<main>
+
+<!-- ============ SCENE 0: PROLOGUE ============ -->
+<section class="scene" data-title="Prologue">
+  <div class="chapter">Prologue · Introduction to Data Preparation</div>
+  <h1>The dataset that wouldn't behave</h1>
+  <p class="story">Sami just joined Fennec Express, a delivery startup in Sousse. The team wants a model that predicts how many minutes each delivery will take. Sami opens the export from the app: raw records, some of them clearly broken. No algorithm can learn anything from that yet.</p>
+
+  <div class="card">
+    <p><strong>Data preparation</strong> is the process of cleaning, formatting, transforming, and integrating raw data into a format suitable for modeling. It directly affects how well the final model performs.</p>
+    <div class="pipe">
+      <div class="flow"></div>
+      <div class="stage" style="left:0">Raw data</div>
+      <div class="stage" style="left:50%;transform:translateX(-50%)">Data preparation</div>
+      <div class="stage" style="right:0">ML model</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Sami's missions</h2>
+    <p>Each mission is one step of the course chapter. Finish them all to earn the delivery model its first clean dataset.</p>
+    <ol>
+      <li>Discovery &amp; profiling: understand what the data contains</li>
+      <li>Cleaning: fix missing values, duplicates, errors and outliers</li>
+      <li>Split first: separate train and test before any preparation</li>
+      <li>Transformation: scale features and reshape distributions</li>
+      <li>Feature engineering: derive new features and encode categories</li>
+      <li>Dimensionality reduction: select or project features</li>
+      <li>Images are matrices: pixels, channels and DataFrames</li>
+      <li>Feature extraction: colour, shape and texture from photos</li>
+      <li>Feature selection on image features: keep what separates car, cat and dog</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ SCENE 1: DISCOVERY ============ -->
+<section class="scene" data-title="Discovery">
+  <div class="chapter">Mission 1 · Data Discovery &amp; Profiling</div>
+  <h1>Look before you touch</h1>
+  <p class="story">Sami loads the export and asks the first question every analyst should ask: what do I actually have? Here are the first eight rows of the file.</p>
+
+  <div class="card">
+    <div id="discTable"></div>
+    <button class="btn" id="btnDiag">Diagnose: missing values and duplicates</button>
+    <button class="btn alt" id="btnHist">Show delivery_min distribution</button>
+    <p class="stat" id="discSummary"></p>
+    <div id="discHist" class="bars"></div>
+    <div id="discLabels" class="labels"></div>
+    <p class="stat" id="discStats"></p>
+  </div>
+
+  <div class="note"><strong>Profiling asks:</strong> what are the data types, ranges, missing values, duplicates and distributions? A single 300-minute delivery pulls the average up, and the histogram shows it as a lonely bar far to the right.</div>
+
+  <details>
+    <summary>See the course code (slides 10–13)</summary>
+<pre class="code">import pandas as pd
+data = pd.read_csv('filename.csv')
+print(data.head())
+print(data.info())
+print(data.describe())
+print(data.isnull().sum())
+print(data.duplicated().sum())
+data.plot.hist(bins=10)</pre>
+  </details>
+</section>
+
+<!-- ============ SCENE 2: CLEANING ============ -->
+<section class="scene" data-title="Cleaning">
+  <div class="chapter">Mission 2 · Data Cleaning</div>
+  <h1>Fix the four problems</h1>
+  <p class="story">Sami found four problems: a duplicated row, a missing distance, an impossible driver age, and a delivery time that cannot be real. Apply each fix and watch the data health meter climb.</p>
+
+  <div class="card">
+    <div class="meter"><i id="healthBar"></i></div>
+    <p class="stat" id="healthText"></p>
+    <div class="toggle">
+      <button class="btn fix" data-fix="dup">1. Remove duplicate rows</button>
+      <button class="btn fix" data-fix="miss">2. Impute missing distance (median)</button>
+      <button class="btn fix" data-fix="age">3. Correct impossible age</button>
+      <button class="btn fix" data-fix="out">4. Filter outliers (IQR rule)</button>
+    </div>
+    <div id="cleanTable"></div>
+    <p class="stat" id="cleanNote"></p>
+  </div>
+
+  <div class="note"><strong>Cleaning in four moves:</strong> remove irrelevant observations, handle missing values (delete or impute), correct errors, and filter outliers. Green cells are fixed; red cells still need attention. The IQR rule flags any value below Q1 − 1.5·IQR or above Q3 + 1.5·IQR.</div>
+
+  <details>
+    <summary>See the course code (slides 22, 24–26)</summary>
+<pre class="code">df = df.drop_duplicates()
+df_mean = df.fillna(df.mean())
+df['Age'] = df['Age'].replace({-5: 35})
+
+Q1 = df['Age'].quantile(0.25)
+Q3 = df['Age'].quantile(0.75)
+IQR = Q3 - Q1
+df = df[~((df['Age'] &lt; Q1 - 1.5 * IQR) | (df['Age'] &gt; Q3 + 1.5 * IQR))]</pre>
+  </details>
+</section>
+
+<!-- ============ SCENE 3: SPLIT FIRST ============ -->
+<section class="scene" data-title="Split first">
+  <div class="chapter">Mission 3 · Split before you prepare</div>
+  <h1>The exam must stay sealed</h1>
+  <p class="story">Sami's mentor leans over: "Before you scale anything, split the data. The test set is the exam. If you study from it, your grade means nothing." Ten delivery rows are waiting to be divided.</p>
+
+  <div class="card">
+    <div class="toggle">
+      <button class="btn" id="btnSplit">Split 80 / 20</button>
+      <button class="btn alt" id="btnShuffle">Shuffle again</button>
+    </div>
+    <div id="pool" class="stat"></div>
+    <div class="boxes">
+      <div class="box"><strong>Training set (8 rows)</strong><div id="trainBox"></div></div>
+      <div class="box"><strong>Testing set (2 rows)</strong><div id="testBox"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Where should the scaler learn from?</h2>
+    <div class="toggle">
+      <button class="btn" id="btnGood">Fit on training data only</button>
+      <button class="btn alt" id="btnBad">Scale everything, then split</button>
+    </div>
+    <p class="stat" id="leakText">Pick one option to see what happens to the test set.</p>
+  </div>
+
+  <details>
+    <summary>See the course code (slide 28)</summary>
+<pre class="code">from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2)</pre>
+  </details>
+</section>
+
+<!-- ============ SCENE 4: TRANSFORMATION ============ -->
+<section class="scene" data-title="Transformation">
+  <div class="chapter">Mission 4 · Data Transformation</div>
+  <h1>Same shape, new scale</h1>
+  <p class="story">Sami's features live on very different scales: one ranges up to 12,000, the other from 1 to 5. Algorithms that measure distance get confused. Try the scalers and see how the points move.</p>
+
+  <div class="row">
+    <div class="card">
+      <h2>Feature scaling</h2>
+      <div class="toggle">
+        <button class="btn alt sc" data-mode="orig">Original</button>
+        <button class="btn sc" data-mode="mm">Min-Max</button>
+        <button class="btn sc" data-mode="std">Standard</button>
+      </div>
+      <div class="plot" id="scalePlot"></div>
+      <p class="stat" id="scaleText"></p>
+    </div>
+
+    <div class="card">
+      <h2>Reshape a skewed distribution</h2>
+      <p class="stat">Slide the power parameter to reshape the right-skewed delivery distances.</p>
+      <input type="range" id="lam" min="0" max="100" value="0">
+      <p class="stat" id="lamText"></p>
+      <div id="skewBars" class="bars"></div>
+      <p class="stat" id="skewText"></p>
+    </div>
+  </div>
+
+  <div class="warn"><strong>Min-Max</strong> maps values to [0, 1] and is sensitive to outliers. <strong>Standard</strong> gives mean 0 and unit variance and is less sensitive. The slide-30 formula is X_new = (X − min) / (max − min). The power transform here is a simplified Box-Cox; the course's PowerTransformer(method='yeo-johnson') also handles negative values.</div>
+
+  <details>
+    <summary>See the course code (slides 30–32)</summary>
+<pre class="code">scaler = MinMaxScaler()
+scaler.fit(X_train)                 # learn from train only
+X_train_scaled = scaler.transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+transformer = PowerTransformer(method='yeo-johnson')
+transformer.fit(X_train)</pre>
+  </details>
+</section>
+
+<!-- ============ SCENE 5: FEATURE ENGINEERING ============ -->
+<section class="scene" data-title="Feature engineering">
+  <div class="chapter">Mission 5 · Feature Engineering</div>
+  <h1>Turn raw clues into useful features</h1>
+  <p class="story">The model cannot read the word "Khezama". And a timestamp hides the hour of the day, which might matter a lot for delivery time. Sami gives the model better clues.</p>
+
+  <div class="row">
+    <div class="card">
+      <h2>Encode a category</h2>
+      <div class="toggle">
+        <button class="btn enc" data-enc="oh">One-hot encoding</button>
+        <button class="btn alt enc" data-enc="lab">Label encoding</button>
+      </div>
+      <div id="encTable"></div>
+      <p class="stat" id="encText"></p>
+    </div>
+
+    <div class="card">
+      <h2>Decompose a timestamp</h2>
+      <p class="stat">Timestamp: <code>2022-01-01 01:00:00</code></p>
+      <button class="btn" id="btnDate">Break it into features</button>
+      <div id="dateOut" style="margin-top:10px"></div>
+      <div class="note">Decomposition turns one complex feature into several simple ones the model can use. Aggregation works the same way: summaries like mean, min and max per group become new features.</div>
+    </div>
+  </div>
+
+  <details>
+    <summary>See the course code (slides 35, 36, 40)</summary>
+<pre class="code">pd.get_dummies(df['color'], prefix='color')          # one-hot
+LabelEncoder().fit_transform(df['grade'])           # label
+df['date'] = pd.to_datetime(df['date'])
+df['hour'] = df['date'].dt.hour</pre>
+  </details>
+</section>
+
+<!-- ============ SCENE 6: DIMENSIONALITY ============ -->
+<section class="scene" data-title="Dimensionality">
+  <div class="chapter">Mission 6 · Dimensionality Reduction</div>
+  <h1>Fewer features, same story</h1>
+  <p class="story">Sami has too many correlated features. There are two ways to shrink them: pick the best existing features (selection), or create new compact ones (projection). Try both.</p>
+
+  <div class="card">
+    <div class="toggle">
+      <button class="btn dr" data-dr="sel">Feature selection</button>
+      <button class="btn alt dr" data-dr="proj">Feature projection (PCA)</button>
+    </div>
+
+    <div id="drSel">
+      <p class="stat">Keep the most informative original features. Importance values below are illustrative, like a decision tree's feature importances.</p>
+      <div class="feat-row" data-imp="0.46"><span class="nm">distance_km</span><span class="bg"><i></i></span></div>
+      <div class="feat-row" data-imp="0.08"><span class="nm">driver_age</span><span class="bg"><i></i></span></div>
+      <div class="feat-row" data-imp="0.31"><span class="nm">zone</span><span class="bg"><i></i></span></div>
+      <div class="feat-row" data-imp="0.15"><span class="nm">hour</span><span class="bg"><i></i></span></div>
+      <p class="stat">Keeping the top 2 features: distance_km and zone.</p>
+    </div>
+
+    <div id="drProj" style="display:none">
+      <p class="stat">Forty deliveries described by two correlated features. PCA finds the direction where they vary most (PC1).</p>
+      <canvas id="pcaC"></canvas>
+      <div class="toggle">
+        <button class="btn" id="btnProj">Project onto PC1</button>
+        <button class="btn alt" id="btnBack">Back to original points</button>
+      </div>
+      <p class="stat" id="pcaText"></p>
+      <div class="meter"><i id="varBar" style="background:var(--accent2)"></i></div>
+      <p class="stat">Bar shows variance kept by PC1. The 98% threshold from the course sits at the right-hand side of the track.</p>
+    </div>
+  </div>
+
+  <details>
+    <summary>See the course code (slides 47, 48, 50, 51)</summary>
+<pre class="code">rfe = RFE(LogisticRegression(), n_features_to_select=2)
+clf = DecisionTreeClassifier().fit(X, y)
+print(clf.feature_importances_)
+
+# PCA steps: standardize, covariance, eigen decomposition,
+# keep D components with cumulative ratio above threshold
+from sklearn.decomposition import PCA</pre>
+  </details>
+</section>
+
+<!-- ============ SCENE 7: IMAGE IS A MATRIX ============ -->
+<section class="scene" data-title="Image is a matrix">
+  <div class="chapter">Mission 7 · Computer Vision</div>
+  <h1>An image is a matrix of numbers</h1>
+  <p class="story">The vehicle-and-pet team at Fennec Express needs a classifier that answers one question for each photo: is it a car, a cat or a dog? Before any model can answer, Sami has to know what a computer actually sees.</p>
+
+  <div class="card">
+    <p>Every picture is a grid of <strong>pixels</strong>. A colour pixel stores three numbers: <strong>Red, Green and Blue</strong>, each from 0 to 255. Hover over the picture to read one pixel. The image below is 24 × 24 pixels, enlarged so you can see the squares.</p>
+    <div class="toggle">
+      <button class="btn cls7" data-c7="car">Car</button>
+      <button class="btn alt cls7" data-c7="cat">Cat</button>
+      <button class="btn alt cls7" data-c7="dog">Dog</button>
+      <button class="btn alt" id="btnNext7">Next photo</button>
+    </div>
+    <div class="row">
+      <div>
+        <canvas id="showC" class="showc"></canvas>
+        <p class="stat" id="pixInfo">Hover over the picture to read a pixel.</p>
+      </div>
+      <div>
+        <p class="stat">Show one channel as a matrix (values 0 to 255):</p>
+        <div class="toggle">
+          <button class="btn chb" data-ch="R">Red</button>
+          <button class="btn alt chb" data-ch="G">Green</button>
+          <button class="btn alt chb" data-ch="B">Blue</button>
+          <button class="btn alt chb" data-ch="Gray">Grayscale</button>
+        </div>
+        <div id="chTable" class="scrollx"></div>
+      </div>
+    </div>
+    <p class="stat" id="shapeInfo"></p>
+  </div>
+
+  <div class="note"><strong>Matrix view:</strong> a 24 × 24 colour image is three 24 × 24 matrices stacked together (red, green, blue), so it holds 1,728 numbers. Grayscale keeps one matrix of 576 numbers. A real phone photo has millions of values, which is why the next missions summarise the image with features.</div>
+
+  <details>
+    <summary>See the Python for this step</summary>
+<pre class="code">from PIL import Image
+import numpy as np
+
+img = np.array(Image.open('car.jpg'))        # shape (height, width, 3)
+print(img.shape)                             # e.g. (24, 24, 3)
+red = img[:, :, 0]                           # the red matrix
+gray = np.array(Image.open('car.jpg').convert('L'))   # one matrix</pre>
+  </details>
+</section>
+
+<!-- ============ SCENE 8: FEATURE EXTRACTION ============ -->
+<section class="scene" data-title="Feature extraction">
+  <div class="chapter">Mission 8 · Feature Extraction</div>
+  <h1>Describe each photo by colour, shape and texture</h1>
+  <p class="story">Raw pixels are hard for a model to use directly. Sami extracts the kind of description people use: what colours the photo has, what outline the main subject makes, and how the surface looks.</p>
+
+  <div class="card">
+    <div class="toggle">
+      <button class="btn cls8" data-c8="car">Car</button>
+      <button class="btn alt cls8" data-c8="cat">Cat</button>
+      <button class="btn alt cls8" data-c8="dog">Dog</button>
+      <button class="btn alt" id="btnNext8">Next photo</button>
+    </div>
+    <div class="toggle" style="align-items:flex-end">
+      <div><p class="stat">Original</p><canvas id="origC" class="smallc"></canvas></div>
+      <div><p class="stat">Subject mask (shape)</p><canvas id="maskC" class="smallc"></canvas></div>
+      <div><p class="stat">Edges (texture)</p><canvas id="edgeC" class="smallc"></canvas></div>
+    </div>
+    <p class="stat" id="extraInfo"></p>
+    <div class="cards3">
+      <div class="subcard" id="colorF"></div>
+      <div class="subcard" id="shapeF"></div>
+      <div class="subcard" id="texF"></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Three families of features:</strong>
+    <strong>colour</strong> asks what colours the photo has (average red, green, blue and saturation);
+    <strong>shape</strong> asks where the subject is and how its outline looks (the mask shows which pixels differ from the background, so area, aspect ratio and boundary length follow);
+    <strong>texture</strong> asks how busy the surface is (contrast, edge density and entropy of the grayscale values).
+  </div>
+
+  <div class="card">
+    <h2>The feature dataset</h2>
+    <p class="stat" id="dsInfo"></p>
+    <div id="dsTable" style="overflow-x:auto"></div>
+    <p class="stat">CSV preview:</p>
+    <pre class="code" id="csvPreview"></pre>
+    <button class="btn" id="btnDownload">Download image_features.csv</button>
+  </div>
+
+  <details>
+    <summary>See the Python for this step</summary>
+<pre class="code">import numpy as np
+import pandas as pd
+
+rgb = img.astype(float)                       # shape (24, 24, 3)
+gray = rgb @ np.array([0.299, 0.587, 0.114])  # shape (24, 24)
+
+# colour features
+mean_R, mean_G, mean_B = rgb.mean(axis=(0, 1)) / 255
+
+# shape features: pixels that differ from the background colour
+bg = np.concatenate([rgb[0], rgb[-1], rgb[:, 0], rgb[:, -1]]).mean(axis=0)
+mask = np.linalg.norm(rgb - bg, axis=2) &gt; 60
+area_frac = mask.mean()
+
+# texture features
+gx = np.abs(np.diff(gray, axis=1)).sum()
+edge_density = (np.abs(np.diff(gray, axis=1)) &gt; 40).mean()
+
+row = {'mean_R': mean_R, 'area_frac': area_frac, 'edge_density': edge_density}
+pd.DataFrame([row]).to_csv('image_features.csv', index=False)</pre>
+  </details>
+</section>
+
+<!-- ============ SCENE 9: FEATURE SELECTION FOR IMAGES ============ -->
+<section class="scene" data-title="Image feature selection">
+  <div class="chapter">Mission 9 · Feature Selection for Image Features</div>
+  <h1>Keep the features that tell car, cat and dog apart</h1>
+  <p class="story">Each photo now has fourteen features. Some are duplicates in different units, and one never changes because every photo has a fully opaque alpha channel. Sami applies the selection steps from earlier in the course and keeps the features that separate the three classes.</p>
+
+  <div class="card">
+    <div id="selTable" style="overflow-x:auto"></div>
+    <div class="toggle" style="margin-top:12px">
+      <button class="btn fix" data-sel="1">1 · Drop near-constant features</button>
+      <button class="btn fix" data-sel="2">2 · Drop redundant features (|r| &gt; 0.95)</button>
+      <button class="btn fix" data-sel="3">3 · Keep top 5 by class separation</button>
+      <button class="btn alt" id="btnSelReset">Reset selection</button>
+    </div>
+    <p class="stat" id="selInfo"></p>
+    <p class="stat" id="selCount"></p>
+  </div>
+
+  <div class="card">
+    <h2>Selected features as CSV</h2>
+    <pre class="code" id="selCSV"></pre>
+    <button class="btn" id="btnSelDownload">Download selected_features.csv</button>
+  </div>
+
+  <div class="note"><strong>Class separation (η²)</strong> is the share of a feature's variance explained by the label (car, cat or dog). A high score means the feature helps tell the classes apart. Scoring each feature alone, before training any model, is a filter method, like the ANOVA-based SelectKBest in scikit-learn.</div>
+
+  <details>
+    <summary>See the Python for this step</summary>
+<pre class="code">from sklearn.feature_selection import VarianceThreshold, SelectKBest, f_classif
+
+X = VarianceThreshold(threshold=1e-3).fit_transform(X)    # drop near-constant
+corr = X.corr().abs()
+upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(bool))
+to_drop = [c for c in upper.columns if any(upper[c] &gt; 0.95)]
+X = X.drop(columns=to_drop)                                # drop redundant
+
+selector = SelectKBest(f_classif, k=5).fit(X, y)            # keep top 5
+X_selected = selector.transform(X)</pre>
+  </details>
+</section>
+
+<!-- ============ SCENE 10: FINALE ============ -->
+<section class="scene" data-title="Finale">
+  <div class="chapter">Epilogue · Mission complete</div>
+  <h1>The model is ready to learn</h1>
+  <p class="story">Sami sends the prepared dataset to the modeling team. Before closing the laptop, Sami checks the chapter objectives one last time.</p>
+
+  <div class="card">
+    <label class="check"><input type="checkbox"><span>Explain what data preparation is and where it fits in the ML workflow</span></label>
+    <label class="check"><input type="checkbox"><span>Discover and profile a dataset to understand its structure and issues</span></label>
+    <label class="check"><input type="checkbox"><span>Clean data: missing values, duplicates, errors and outliers</span></label>
+    <label class="check"><input type="checkbox"><span>Transform data: scale features and reshape distributions</span></label>
+    <label class="check"><input type="checkbox"><span>Engineer features and reduce dimensionality with selection and projection</span></label>
+    <label class="check"><input type="checkbox"><span>Split data correctly before any preparation step</span></label>
+    <label class="check"><input type="checkbox"><span>Turn images into feature tables (DataFrame or CSV) through transformation and feature extraction</span></label>
+    <p class="finale" id="finaleText"></p>
+  </div>
+
+  <div class="note"><strong>Remember:</strong> profile first, split before you prepare, fit transformers on training data only, and keep only the features that carry the signal.</div>
+  <p class="stat">Based on Chapter 2, Data Preparation (Noura Aboudi, PhD).</p>
+</section>
+
+</main>
+
+<div class="nav">
+  <button class="btn alt" id="prevBtn">← Back</button>
+  <button class="btn" id="nextBtn">Next →</button>
+</div>
+
+<script>
+/* ---------- navigation ---------- */
+const scenes=[...document.querySelectorAll('.scene')];
+const dotsEl=document.getElementById('dots');
+const prevBtn=document.getElementById('prevBtn');
+const nextBtn=document.getElementById('nextBtn');
+let cur=0;
+
+scenes.forEach((s,i)=>{
+  const d=document.createElement('button');
+  d.className='dot';
+  d.title=s.dataset.title;
+  d.setAttribute('aria-label','Go to '+s.dataset.title);
+  d.onclick=()=>go(i);
+  dotsEl.appendChild(d);
+});
+
+function go(i){
+  cur=Math.max(0,Math.min(scenes.length-1,i));
+  scenes.forEach((s,k)=>s.classList.toggle('on',k===cur));
+  [...dotsEl.children].forEach((d,k)=>{d.classList.toggle('on',k===cur);d.classList.toggle('done',k<cur);});
+  prevBtn.disabled=cur===0;
+  nextBtn.textContent=cur===scenes.length-1?'Start over ↺':'Next →';
+  if(cur===6) sizeCanvas();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+prevBtn.onclick=()=>go(cur-1);
+nextBtn.onclick=()=>{ if(cur===scenes.length-1){ resetAll(); go(0);} else go(cur+1); };
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight') go(cur+1);
+  if(e.key==='ArrowLeft') go(cur-1);
+});
+
+/* ---------- helpers ---------- */
+const raw=[
+  {age:24,dist:3.2,min:18,zone:'Sousse Centre'},
+  {age:31,dist:5.8,min:27,zone:'Khezama'},
+  {age:-5,dist:4.1,min:22,zone:'Sahloul'},
+  {age:28,dist:null,min:31,zone:'Sousse Centre'},
+  {age:45,dist:2.4,min:15,zone:'Kalaa Kebira'},
+  {age:24,dist:3.2,min:18,zone:'Sousse Centre'},
+  {age:39,dist:7.9,min:300,zone:'Hammam Sousse'},
+  {age:33,dist:6.1,min:34,zone:'Khezama'}
+];
+const fresh=()=>raw.map(r=>({...r,fixed:{},gone:false}));
+const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+const stdev=a=>{const m=mean(a);return Math.sqrt(mean(a.map(v=>(v-m)**2)));};
+function quantile(arr,q){
+  const s=[...arr].sort((a,b)=>a-b);
+  const pos=(s.length-1)*q, lo=Math.floor(pos), hi=Math.ceil(pos);
+  return s[lo]+(s[hi]-s[lo])*(pos-lo);
+}
+const clamp=(v,a=2,b=98)=>Math.max(a,Math.min(b,v));
+
+function findIssues(rows){
+  const live=rows.filter(r=>!r.gone);
+  const seen=new Set(), dup=new Set();
+  live.forEach(r=>{
+    const k=[r.age,r.dist,r.min,r.zone].join('|');
+    if(seen.has(k)) dup.add(r); else seen.add(k);
+  });
+  const missing=live.filter(r=>r.dist===null);
+  const badAge=live.filter(r=>r.age<0);
+  const mins=live.map(r=>r.min);
+  const q1=quantile(mins,.25), q3=quantile(mins,.75), iqr=q3-q1;
+  const lo=q1-1.5*iqr, hi=q3+1.5*iqr;
+  const outliers=live.filter(r=>r.min<lo||r.min>hi);
+  return {live,dup,missing,badAge,outliers,lo,hi};
+}
+
+function drawTable(el,rows,showIssues){
+  const iss=findIssues(rows);
+  let h='<table><thead><tr><th>driver_age</th><th>distance_km</th><th>delivery_min</th><th>zone</th></tr></thead><tbody>';
+  rows.forEach(r=>{
+    const isDup=showIssues&&iss.dup.has(r);
+    const cell=(v,bad,fixed)=>`<td class="${showIssues&&bad?'bad':''} ${fixed?'fixed':''}">${v===null?'—':v}</td>`;
+    const isOut=showIssues&&iss.outliers.includes(r);
+    h+=`<tr class="${r.gone?'gone':''}">`
+      +cell(r.age,r.age<0,r.fixed.age)
+      +cell(r.dist,r.dist===null,r.fixed.dist)
+      +cell(r.min,isOut,false)
+      +`<td>${r.zone}${isDup?'<span class="tag">duplicate</span>':''}</td></tr>`;
+  });
+  el.innerHTML=h+'</tbody></table>';
+}
+
+function histo(el,labelEl,vals){
+  const bins=7,w=50;
+  const counts=Array(bins).fill(0);
+  vals.forEach(v=>{const b=Math.min(bins-1,Math.floor(v/w));counts[b]++;});
+  const max=Math.max(1,...counts);
+  el.innerHTML=counts.map(c=>`<div class="bar" style="height:${c/max*100}%"><b>${c}</b></div>`).join('');
+  labelEl.innerHTML=counts.map((_,i)=>`<div>${i*w}–${(i+1)*w}</div>`).join('');
+}
+
+/* ---------- Mission 1 ---------- */
+let discRows=fresh();
+document.getElementById('btnDiag').onclick=()=>{
+  drawTable(document.getElementById('discTable'),discRows,true);
+  const i=findIssues(discRows);
+  document.getElementById('discSummary').textContent=
+    `${i.live.length} rows · ${i.missing.length} missing distance · ${i.dup.size} duplicate row · ${i.badAge.length} impossible age · ${i.outliers.length} extreme delivery time`;
+};
+document.getElementById('btnHist').onclick=()=>{
+  const live=discRows.filter(r=>!r.gone).map(r=>r.min);
+  histo(document.getElementById('discHist'),document.getElementById('discLabels'),live);
+  document.getElementById('discStats').textContent=
+    `delivery_min · count ${live.length} · mean ${mean(live).toFixed(1)} · min ${Math.min(...live)} · max ${Math.max(...live)}. The mean is pulled up by one extreme value.`;
+};
+
+/* ---------- Mission 2 ---------- */
+let cleanRows=fresh();
+const done=new Set();
+function renderClean(){
+  drawTable(document.getElementById('cleanTable'),cleanRows,true);
+  const i=findIssues(cleanRows);
+  const remaining=i.dup.size+i.missing.length+i.badAge.length+i.outliers.length;
+  document.getElementById('healthBar').style.width=(done.size/4*100)+'%';
+  document.getElementById('healthText').textContent=`Data health: ${done.size}/4 fixes applied · ${remaining} issue cells or rows remaining`;
+  document.querySelectorAll('[data-fix]').forEach(b=>b.disabled=done.has(b.dataset.fix));
+  document.getElementById('cleanNote').textContent=
+    remaining===0?'All clean. The data is ready to explore and model.':'';
+}
+function markGone(list){
+  list.forEach(r=>r.gone=true);
+  renderClean();
+  setTimeout(()=>{cleanRows=cleanRows.filter(r=>!r.gone);renderClean();},480);
+}
+document.querySelectorAll('[data-fix]').forEach(b=>b.onclick=()=>{
+  const kind=b.dataset.fix;
+  const iss=findIssues(cleanRows);
+  if(kind==='dup') markGone([...iss.dup]);
+  if(kind==='miss'){
+    const med=quantile(iss.live.filter(r=>r.dist!==null).map(r=>r.dist),.5);
+    iss.missing.forEach(r=>{r.dist=med;r.fixed.dist=true;});
+  }
+  if(kind==='age'){
+    const med=quantile(iss.live.filter(r=>r.age>=0).map(r=>r.age),.5);
+    iss.badAge.forEach(r=>{r.age=med;r.fixed.age=true;});
+  }
+  if(kind==='out') markGone(iss.outliers);
+  done.add(kind);
+  if(kind!=='dup'&&kind!=='out') renderClean();
+  if(kind==='dup'||kind==='out') renderClean();
+  renderClean();
+});
+
+/* ---------- Mission 3 ---------- */
+function splitData(){
+  const idx=[...Array(10).keys()].sort(()=>Math.random()-.5);
+  const tr=document.getElementById('trainBox'), te=document.getElementById('testBox');
+  document.getElementById('pool').innerHTML='';
+  tr.innerHTML=''; te.innerHTML='';
+  idx.forEach((k,j)=>{
+    const c=document.createElement('span');
+    c.className='chip '+(j<8?'tr':'te');
+    c.style.animationDelay=(j*0.06)+'s';
+    c.textContent='row '+(k+1);
+    (j<8?tr:te).appendChild(c);
+  });
+}
+function showPool(){
+  const p=document.getElementById('pool');
+  p.innerHTML='';
+  for(let k=1;k<=10;k++){const c=document.createElement('span');c.className='chip pool';c.textContent='row '+k;p.appendChild(c);}
+}
+document.getElementById('btnSplit').onclick=splitData;
+document.getElementById('btnShuffle').onclick=splitData;
+document.getElementById('btnGood').onclick=()=>{
+  document.getElementById('leakText').textContent='✓ The scaler learns min, max and mean from the 8 training rows only. The 2 test rows are transformed with those same numbers, so the test set stays a fair exam.';
+};
+document.getElementById('btnBad').onclick=()=>{
+  document.getElementById('leakText').textContent='✗ The test rows influenced the scaler\'s statistics. The model has now seen a hint of its exam, so its test score will look better than it really is. This is data leakage.';
+};
+
+/* ---------- Mission 4: scaling ---------- */
+const X=[900,1500,2200,3100,4000,4800,5600,12000];
+const Y=[2.1,3.4,2.8,4.5,3.9,1.8,4.2,3.0];
+const scalePlot=document.getElementById('scalePlot');
+const pts=X.map(()=>{const p=document.createElement('div');p.className='pt';scalePlot.appendChild(p);return p;});
+const scaleNotes={
+  orig:'Original units: the 12,000 value stretches the axis. Other points crowd together.',
+  mm:'Min-Max: every value now lives in [0, 1]. The outlier still sets the scale, so the rest of the points are squeezed to the left.',
+  std:'Standard: centered at mean 0 with unit spread. Points keep their relative positions, and the outlier sits about two standard deviations out.'
+};
+function placeScale(mode){
+  const minX=Math.min(...X),maxX=Math.max(...X),minY=Math.min(...Y),maxY=Math.max(...Y);
+  const mX=mean(X),sX=stdev(X),mY=mean(Y),sY=stdev(Y);
+  pts.forEach((p,i)=>{
+    let xp,yp;
+    if(mode==='orig'){xp=X[i]/12000*100;yp=Y[i]/5*100;}
+    else if(mode==='mm'){xp=(X[i]-minX)/(maxX-minX)*100;yp=(Y[i]-minY)/(maxY-minY)*100;}
+    else{xp=((X[i]-mX)/sX+2)/5*100;yp=((Y[i]-mY)/sY+2)/5*100;}
+    p.style.left=clamp(xp)+'%';
+    p.style.top=(100-clamp(yp))+'%';
+  });
+  document.getElementById('scaleText').textContent=scaleNotes[mode];
+  document.querySelectorAll('.sc').forEach(b=>b.classList.toggle('alt',b.dataset.mode!==mode));
+}
+document.querySelectorAll('.sc').forEach(b=>b.onclick=()=>placeScale(b.dataset.mode));
+
+/* ---------- Mission 4: skew ---------- */
+const skewVals=[1,1.2,1.4,1.5,1.6,1.8,2,2.1,2.4,2.6,3,3.2,3.5,4,4.4,5,6,7,8.5,10,13,17,22,30];
+const lam=document.getElementById('lam');
+function skewSim(){
+  const s=+lam.value, L=1-s/100;
+  const t=skewVals.map(x=>L<1e-9?Math.log(x):(Math.pow(x,L)-1)/L);
+  const lo=Math.min(...t),hi=Math.max(...t),B=10,c=Array(B).fill(0);
+  t.forEach(v=>{let b=Math.floor((v-lo)/(hi-lo+1e-12)*B);if(b>=B)b=B-1;c[b]++;});
+  const mx=Math.max(...c);
+  document.getElementById('skewBars').innerHTML=c.map(n=>`<div class="bar" style="height:${n/mx*100}%;background:var(--accent)"></div>`).join('');
+  const m=mean(t), sd=stdev(t)||1;
+  const sk=mean(t.map(v=>((v-m)/sd)**3));
+  document.getElementById('lamText').textContent=`Power parameter λ = ${L.toFixed(2)} ${L<1e-9?'(logarithm)':''}`;
+  document.getElementById('skewText').textContent=`Skewness: ${sk.toFixed(2)} · ${Math.abs(sk)<0.5?'roughly symmetric: mean and median are close':'still skewed: the long tail pulls the mean to the right'}`;
+}
+lam.oninput=skewSim;
+
+/* ---------- Mission 5 ---------- */
+const sampleZones=['Khezama','Sahloul','Sousse Centre','Khezama','Kalaa Kebira'];
+const cats=[...new Set(sampleZones)].sort();
+function renderEnc(mode){
+  const el=document.getElementById('encTable');
+  let h='<table><thead><tr>';
+  if(mode==='oh'){
+    h+='<th>zone</th>'+cats.map(c=>`<th>zone_${c}</th>`).join('')+'</tr></thead><tbody>';
+    sampleZones.forEach(z=>{h+=`<tr><td>${z}</td>`+cats.map(c=>`<td>${z===c?1:0}</td>`).join('')+'</tr>';});
+    document.getElementById('encText').textContent='One binary column per category. No false order is implied, but the table gets wider as categories grow.';
+  }else{
+    h+='<th>zone</th><th>zone_code</th></tr></thead><tbody>';
+    sampleZones.forEach(z=>{h+=`<tr><td>${z}</td><td>${cats.indexOf(z)}</td></tr>`;});
+    document.getElementById('encText').textContent='One number per category. Compact, but the model may read Sousse Centre (2) as "more" than Khezama (0). Use it for ordinal data.';
+  }
+  el.innerHTML=h+'</tbody></table>';
+  document.querySelectorAll('.enc').forEach(b=>b.classList.toggle('alt',b.dataset.enc!==mode));
+}
+document.querySelectorAll('.enc').forEach(b=>b.onclick=()=>renderEnc(b.dataset.enc));
+document.getElementById('btnDate').onclick=()=>{
+  const out=document.getElementById('dateOut');
+  const parts=['year 2022','month 1','day 1','hour 1'];
+  out.innerHTML=parts.map((p,i)=>`<span class="chip feat pop" style="animation-delay:${i*0.25}s">${p}</span>`).join('');
+};
+
+/* ---------- Mission 6 ---------- */
+document.querySelectorAll('.dr').forEach(b=>b.onclick=()=>{
+  const sel=b.dataset.dr==='sel';
+  document.getElementById('drSel').style.display=sel?'block':'none';
+  document.getElementById('drProj').style.display=sel?'none':'block';
+  document.querySelectorAll('.dr').forEach(x=>x.classList.toggle('alt',x!==b));
+  if(sel) runSelection();
+  else sizeCanvas();
+});
+function runSelection(){
+  const rows=[...document.querySelectorAll('.feat-row')];
+  const sorted=[...rows].sort((a,b)=>b.dataset.imp-a.dataset.imp);
+  rows.forEach(r=>{r.classList.remove('keep');r.querySelector('i').style.width='0';});
+  setTimeout(()=>rows.forEach(r=>r.querySelector('i').style.width=(r.dataset.imp/0.5*100)+'%'),50);
+  sorted.slice(0,2).forEach(r=>r.classList.add('keep'));
+}
+
+const P=[];
+for(let i=0;i<40;i++){const t=(i-19.5)/8;P.push([t+0.15*Math.sin(i*2.1),0.7*t+0.15*Math.cos(i*1.3)]);}
+const nP=P.length;
+const pmx=P.reduce((s,p)=>s+p[0],0)/nP, pmy=P.reduce((s,p)=>s+p[1],0)/nP;
+let sxx=0,syy=0,sxy=0;
+P.forEach(([x,y])=>{sxx+=(x-pmx)**2;syy+=(y-pmy)**2;sxy+=(x-pmx)*(y-pmy);});
+sxx/=nP;syy/=nP;sxy/=nP;
+const tr=sxx+syy, det=sxx*syy-sxy*sxy, disc=Math.sqrt(tr*tr/4-det);
+const l1=tr/2+disc, l2=tr/2-disc;
+const theta=0.5*Math.atan2(2*sxy,sxx-syy);
+const ratio=l1/tr;
+const cs=Math.cos(theta), sn=Math.sin(theta);
+const Q=P.map(([x,y])=>{const s=(x-pmx)*cs+(y-pmy)*sn;return [pmx+s*cs,pmy+s*sn];});
+
+const pcaC=document.getElementById('pcaC');
+const ctx=pcaC.getContext('2d');
+const allX=[...P,...Q].map(p=>p[0]), allY=[...P,...Q].map(p=>p[1]);
+const bx0=Math.min(...allX),bx1=Math.max(...allX),by0=Math.min(...allY),by1=Math.max(...allY);
+let anim=0;
+function sizeCanvas(){
+  pcaC.width=pcaC.parentElement.clientWidth;
+  pcaC.height=300;
+  drawPCA(anim);
+}
+function drawPCA(t){
+  const W=pcaC.width,H=pcaC.height,m=30;
+  const X2=v=>m+(v-bx0)/(bx1-bx0)*(W-2*m);
+  const Y2=v=>H-m-(v-by0)/(by1-by0)*(H-2*m);
+  const style=getComputedStyle(document.documentElement);
+  const accent=style.getPropertyValue('--accent').trim()||'#e4572e';
+  const ink=style.getPropertyValue('--muted').trim()||'#5b6475';
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(128,128,128,.25)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(m,H-m);ctx.lineTo(W-m,H-m);ctx.moveTo(m,H-m);ctx.lineTo(m,m);ctx.stroke();
+  ctx.setLineDash([6,5]);ctx.strokeStyle=ink;ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(X2(pmx-3*cs),Y2(pmy-3*sn));ctx.lineTo(X2(pmx+3*cs),Y2(pmy+3*sn));ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle=ink;ctx.font='13px system-ui';
+  ctx.fillText('PC1',X2(pmx+3*cs)-20,Y2(pmy+3*sn)-8);
+  P.forEach((p,i)=>{
+    const x=p[0]*(1-t)+Q[i][0]*t, y=p[1]*(1-t)+Q[i][1]*t;
+    if(t>0){
+      ctx.strokeStyle='rgba(128,128,128,.35)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(X2(p[0]),Y2(p[1]));ctx.lineTo(X2(x),Y2(y));ctx.stroke();
+    }
+    ctx.fillStyle=accent;
+    ctx.beginPath();ctx.arc(X2(x),Y2(y),5,0,Math.PI*2);ctx.fill();
+  });
+}
+function animatePCA(to){
+  const from=anim, start=performance.now(), dur=900;
+  function step(now){
+    const k=Math.min(1,(now-start)/dur);
+    const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    anim=from+(to-from)*e;
+    drawPCA(anim);
+    if(k<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function updatePCAText(){
+  const D=ratio>=0.98?1:2;
+  document.getElementById('varBar').style.width=(ratio*100)+'%';
+  document.getElementById('pcaText').textContent=
+    `PC1 keeps ${(ratio*100).toFixed(1)}% of the variance. ${D===1?'That passes the 98% threshold, so D = 1 is enough: each delivery becomes one number instead of two.':'That is below 98%, so keep D = 2.'}`;
+}
+document.getElementById('btnProj').onclick=()=>animatePCA(1);
+document.getElementById('btnBack').onclick=()=>animatePCA(0);
+updatePCAText();
+window.addEventListener('resize',()=>{if(cur===6)sizeCanvas();});
+
+/* ---------- finale ---------- */
+document.querySelectorAll('.check input').forEach(c=>c.onchange=()=>{
+  const all=[...document.querySelectorAll('.check input')].every(x=>x.checked);
+  document.getElementById('finaleText').textContent=all?'Mission complete. The delivery model can start learning. 🎉':'';
+});
+
+/* ---------- Missions 7–9: computer vision ---------- */
+const CLASSES=['car','cat','dog'];
+const CLS_LABEL={car:'Car',cat:'Cat',dog:'Dog'};
+const SZ=24;
+const FEAT=['mean_R','mean_G','mean_B','mean_sat','mean_gray','mean_gray_pct','area_frac','aspect_ratio','perimeter_to_area','centroid_y','gray_std','edge_density','gray_entropy','alpha_mean'];
+const PAL={
+  car:['#c62828','#1565c0','#eeeeee','#2e2e2e','#f9a825','#6d4c41'],
+  cat:['#f08a24','#8a8a8a','#2b2b2b','#e9dcc6'],
+  dog:['#8b5a2b','#d9a54a','#3b2f2f','#f2f2f2']
+};
+
+/* seeded random so every photo is the same each time the page loads */
+function rngFrom(seed){let s=seed*9301+49297;return()=>{s=(s*9301+49297)%233280;return s/233280;};}
+
+/* drawing helpers */
+function rect(g,x,y,w,h,fill){g.fillStyle=fill;g.fillRect(x,y,w,h);}
+function circ(g,x,y,rad,fill){g.fillStyle=fill;g.beginPath();g.arc(x,y,rad,0,Math.PI*2);g.fill();}
+function ell(g,x,y,rx,ry,rot,fill){g.fillStyle=fill;g.beginPath();g.ellipse(x,y,rx,ry,rot,0,Math.PI*2);g.fill();}
+function tri(g,pts,fill){g.fillStyle=fill;g.beginPath();g.moveTo(pts[0][0],pts[0][1]);pts.slice(1).forEach(p=>g.lineTo(p[0],p[1]));g.closePath();g.fill();}
+
+function drawCar(g,col,r){
+  const dx=(r()-0.5)*10;
+  rect(g,0,0,96,66,'#9ecbff');
+  rect(g,0,66,96,30,'#7a7a7a');
+  rect(g,12+dx,48,72,20,col);
+  tri(g,[[28+dx,48],[38+dx,30],[60+dx,30],[72+dx,48]],col);
+  rect(g,40+dx,34,8,12,'#cfeeff');
+  rect(g,51+dx,34,9,12,'#cfeeff');
+  circ(g,30+dx,70,9,'#111');circ(g,70+dx,70,9,'#111');
+  circ(g,30+dx,70,4,'#bbbbbb');circ(g,70+dx,70,4,'#bbbbbb');
+}
+function drawCat(g,col,r){
+  const dx=(r()-0.5)*10;
+  rect(g,0,0,96,80,'#f3e9d2');
+  rect(g,0,80,96,16,'#c9a27a');
+  g.strokeStyle=col;g.lineWidth=7;g.lineCap='round';
+  g.beginPath();g.moveTo(74+dx,70);g.quadraticCurveTo(96,72,88+dx,40);g.stroke();
+  ell(g,50+dx,64,26,17,0,col);
+  tri(g,[[22+dx,32],[24+dx,10],[38+dx,26]],col);
+  tri(g,[[36+dx,26],[50+dx,10],[52+dx,30]],col);
+  ell(g,34+dx,42,17,15,0,col);
+  circ(g,28+dx,40,3.5,'#7dd87d');circ(g,40+dx,40,3.5,'#7dd87d');
+  circ(g,28+dx,40,1.5,'#111');circ(g,40+dx,40,1.5,'#111');
+  tri(g,[[32+dx,48],[36+dx,48],[34+dx,51]],'#e88aa0');
+  if(r()<0.6){rect(g,30+dx,28,2,8,'rgba(0,0,0,.35)');rect(g,36+dx,28,2,8,'rgba(0,0,0,.35)');}
+}
+function drawDog(g,col,r){
+  const dx=(r()-0.5)*10;
+  rect(g,0,0,96,80,'#d8ead0');
+  rect(g,0,80,96,16,'#8fbf7f');
+  g.strokeStyle=col;g.lineWidth=6;g.lineCap='round';
+  g.beginPath();g.moveTo(78+dx,58);g.quadraticCurveTo(94,50,88+dx,28);g.stroke();
+  rect(g,30+dx,70,7,16,col);rect(g,40+dx,70,7,16,col);
+  rect(g,58+dx,70,7,16,col);rect(g,68+dx,70,7,16,col);
+  ell(g,50+dx,62,28,15,0,col);
+  ell(g,20+dx,36,6,14,0.3,'rgba(0,0,0,.3)');
+  ell(g,48+dx,36,6,14,-0.3,'rgba(0,0,0,.3)');
+  ell(g,34+dx,42,17,16,0,col);
+  ell(g,22+dx,50,10,8,0,'#f5e6cf');
+  circ(g,12+dx,46,4,'#111');
+  circ(g,28+dx,38,3,'#111');
+}
+
+/* render one 96px drawing, then shrink it to 24x24 pixels */
+function makeSample(cls,i){
+  const r=rngFrom(CLASSES.indexOf(cls)*100+i+1);
+  const col=PAL[cls][Math.floor(r()*PAL[cls].length)];
+  const big=document.createElement('canvas');big.width=96;big.height=96;
+  const g=big.getContext('2d');
+  if(cls==='car')drawCar(g,col,r);else if(cls==='cat')drawCat(g,col,r);else drawDog(g,col,r);
+  const small=document.createElement('canvas');small.width=SZ;small.height=SZ;
+  const s=small.getContext('2d');s.imageSmoothingEnabled=true;s.imageSmoothingQuality='high';
+  s.drawImage(big,0,0,SZ,SZ);
+  return {cls,i,data:s.getImageData(0,0,SZ,SZ).data};
+}
+const samples=CLASSES.flatMap(c=>[0,1,2,3,4,5].map(i=>makeSample(c,i)));
+const sampleOf=(cls,i)=>samples.find(s=>s.cls===cls&&s.i===i);
+
+/* pixel access and feature extraction */
+function pxRGB(s,r,c){const k=(r*SZ+c)*4,d=s.data;return [d[k],d[k+1],d[k+2]];}
+function analyze(s){
+  const N=SZ*SZ;
+  const G=[];let sR=0,sG=0,sB=0,sSat=0,bR=0,bG=0,bB=0,nb=0;
+  for(let r=0;r<SZ;r++){G.push([]);for(let c=0;c<SZ;c++){
+    const [R,Gc,B]=pxRGB(s,r,c);
+    G[r].push(0.299*R+0.587*Gc+0.114*B);
+    sR+=R;sG+=Gc;sB+=B;
+    const mx=Math.max(R,Gc,B),mn=Math.min(R,Gc,B);
+    sSat+=mx?(mx-mn)/mx:0;
+    if(r===0||c===0||r===SZ-1||c===SZ-1){bR+=R;bG+=Gc;bB+=B;nb++;}
+  }}
+  const bg=[bR/nb,bG/nb,bB/nb];
+  const M=[];let fg=0,sumRow=0,minR=SZ,maxR=-1,minC=SZ,maxC=-1;
+  for(let r=0;r<SZ;r++){M.push([]);for(let c=0;c<SZ;c++){
+    const [R,Gc,B]=pxRGB(s,r,c);
+    const on=Math.hypot(R-bg[0],Gc-bg[1],B-bg[2])>60;
+    M[r].push(on);
+    if(on){fg++;sumRow+=r;minR=Math.min(minR,r);maxR=Math.max(maxR,r);minC=Math.min(minC,c);maxC=Math.max(maxC,c);}
+  }}
+  let bnd=0;
+  for(let r=0;r<SZ;r++)for(let c=0;c<SZ;c++){
+    if(!M[r][c])continue;
+    const touchesBg=[[r-1,c],[r+1,c],[r,c-1],[r,c+1]].some(([a,b])=>a<0||b<0||a>=SZ||b>=SZ||!M[a][b]);
+    if(touchesBg)bnd++;
+  }
+  const E=[];let edges=0;
+  for(let r=0;r<SZ;r++){E.push([]);for(let c=0;c<SZ;c++){
+    const gx=c<SZ-1?G[r][c+1]-G[r][c]:0;
+    const gy=r<SZ-1?G[r+1][c]-G[r][c]:0;
+    const on=Math.abs(gx)+Math.abs(gy)>40;
+    E[r].push(on);if(on)edges++;
+  }}
+  const flat=G.flat(),gm=mean(flat);
+  const bins=Array(8).fill(0);flat.forEach(v=>bins[Math.min(7,Math.floor(v/32))]++);
+  let H=0;bins.forEach(n=>{if(n){const p=n/N;H-=p*Math.log2(p);}});
+  const f={
+    mean_R:sR/N/255,mean_G:sG/N/255,mean_B:sB/N/255,
+    mean_sat:sSat/N,
+    mean_gray:gm/255,mean_gray_pct:gm/255*100,
+    area_frac:fg/N,
+    aspect_ratio:fg?(maxC-minC+1)/(maxR-minR+1):1,
+    perimeter_to_area:fg?bnd/fg:0,
+    centroid_y:fg?sumRow/fg/(SZ-1):0.5,
+    gray_std:stdev(flat)/255,
+    edge_density:edges/N,
+    gray_entropy:H/3,
+    alpha_mean:1
+  };
+  Object.keys(f).forEach(k=>f[k]=+f[k].toFixed(3));
+  return {f,M,E};
+}
+let dataset=samples.map(s=>({label:s.cls,f:analyze(s).f}));
+
+function csvOf(rows,feats){
+  return ['label,'+feats.join(','),...rows.map(r=>r.label+','+feats.map(f=>r.f[f]).join(','))].join('\n');
+}
+function download(name,text){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));
+  a.download=name;a.click();
+}
+function markActive(sel,key,val){
+  document.querySelectorAll(sel).forEach(b=>b.classList.toggle('alt',b.dataset[key]!==val));
+}
+
+/* Mission 7: the matrix view */
+let v7={cls:'car',i:0}, ch7='R', v8={cls:'car',i:0};
+function render7(){
+  const s=sampleOf(v7.cls,v7.i);
+  const c=document.getElementById('showC');
+  c.width=SZ;c.height=SZ;
+  c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(s.data),SZ,SZ),0,0);
+  const idx={R:0,G:1,B:2};
+  let h='<table class="pixmat"><tbody>';
+  for(let r=0;r<SZ;r++){
+    h+='<tr>';
+    for(let k=0;k<SZ;k++){
+      const [R,G,B]=pxRGB(s,r,k);
+      const v=ch7==='Gray'?Math.round(0.299*R+0.587*G+0.114*B):[R,G,B][idx[ch7]];
+      h+=`<td style="background:rgb(${v},${v},${v});color:${v<128?'#fff':'#000'}">${v}</td>`;
+    }
+    h+='</tr>';
+  }
+  document.getElementById('chTable').innerHTML=h+'</tbody></table>';
+  document.getElementById('shapeInfo').textContent=`${CLS_LABEL[v7.cls]} photo #${v7.i+1}: 24 × 24 × 3 = 1,728 numbers in colour, 576 in grayscale.`;
+}
+
+/* Mission 8: masks, edges and features */
+function drawBool(id,fn){
+  const c=document.getElementById(id);c.width=SZ;c.height=SZ;
+  const g=c.getContext('2d');const img=g.createImageData(SZ,SZ);
+  for(let r=0;r<SZ;r++)for(let k=0;k<SZ;k++){
+    const v=fn(r,k)?255:0,p=(r*SZ+k)*4;
+    img.data[p]=v;img.data[p+1]=v;img.data[p+2]=v;img.data[p+3]=255;
+  }
+  g.putImageData(img,0,0);
+}
+function render8(){
+  const s=sampleOf(v8.cls,v8.i);
+  const a=analyze(s);
+  const oc=document.getElementById('origC');oc.width=SZ;oc.height=SZ;
+  oc.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(s.data),SZ,SZ),0,0);
+  drawBool('maskC',(r,k)=>a.M[r][k]);
+  drawBool('edgeC',(r,k)=>a.E[r][k]);
+  const grp=(name,list)=>`<h3 style="font-size:16px;margin:2px 0 6px">${name}</h3><table class="ft"><tbody>${list.map(k=>`<tr><td>${k}</td><td>${a.f[k]}</td></tr>`).join('')}</tbody></table>`;
+  document.getElementById('colorF').innerHTML=grp('Colour',['mean_R','mean_G','mean_B','mean_sat','mean_gray']);
+  document.getElementById('shapeF').innerHTML=grp('Shape',['area_frac','aspect_ratio','perimeter_to_area','centroid_y']);
+  document.getElementById('texF').innerHTML=grp('Texture',['gray_std','edge_density','gray_entropy']);
+  document.getElementById('extraInfo').textContent=`${CLS_LABEL[v8.cls]} photo #${v8.i+1}: the subject covers ${(a.f.area_frac*100).toFixed(0)}% of the frame (white in the mask).`;
+}
+function renderDS8(){
+  document.getElementById('dsInfo').textContent=`${dataset.length} rows × ${FEAT.length+1} columns (label + ${FEAT.length} features), 6 photos per class`;
+  const shown=dataset.filter((_,k)=>k%6<2);
+  document.getElementById('dsTable').innerHTML=
+    '<table style="font-size:11px"><thead><tr><th>label</th>'+FEAT.map(k=>`<th>${k}</th>`).join('')+'</tr></thead><tbody>'
+    +shown.map(r=>`<tr><td>${r.label}</td>`+FEAT.map(k=>`<td>${r.f[k]}</td>`).join('')+'</tr>').join('')
+    +'</tbody></table><p class="stat">Showing 2 of 6 photos per class.</p>';
+  document.getElementById('csvPreview').textContent=csvOf(dataset.slice(0,3),FEAT).split('\n').slice(0,4).join('\n')+'\n…';
+}
+
+/* Mission 9: feature selection */
+let kept=[...FEAT], dropped={};
+const varOf=f=>stdev(dataset.map(d=>d.f[f]))**2;
+function corr(a,b){
+  const x=dataset.map(d=>d.f[a]),y=dataset.map(d=>d.f[b]);
+  const mx=mean(x),my=mean(y);
+  let sxy=0,sx=0,sy=0;
+  for(let i=0;i<x.length;i++){sxy+=(x[i]-mx)*(y[i]-my);sx+=(x[i]-mx)**2;sy+=(y[i]-my)**2;}
+  return sx&&sy?sxy/Math.sqrt(sx*sy):0;
+}
+function eta2(f){
+  const x=dataset.map(d=>d.f[f]),g=mean(x);
+  const sst=x.reduce((s,v)=>s+(v-g)**2,0);
+  let ssb=0;
+  CLASSES.forEach(c=>{
+    const xs=dataset.filter(d=>d.label===c).map(d=>d.f[f]);
+    if(xs.length)ssb+=xs.length*(mean(xs)-g)**2;
+  });
+  return sst?ssb/sst:0;
+}
+function renderSel(){
+  const rows=FEAT.map(f=>{
+    const st=dropped[f]?`<span style="color:var(--bad)">drop: ${dropped[f]}</span>`:'<span style="color:var(--good)">keep</span>';
+    return `<tr><td>${f}</td><td>${varOf(f).toFixed(4)}</td><td>${eta2(f).toFixed(3)}</td><td>${st}</td></tr>`;
+  }).join('');
+  document.getElementById('selTable').innerHTML=
+    '<table><thead><tr><th>feature</th><th>variance</th><th>class separation η²</th><th>status</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  document.getElementById('selInfo').textContent=`${FEAT.length} features → ${kept.length} kept`;
+  document.getElementById('selCount').textContent=`Compare: one colour photo has 1,728 raw numbers. After extraction it has ${FEAT.length} features, and after selection ${kept.length}.`;
+  const lines=csvOf(dataset,kept).split('\n');
+  document.getElementById('selCSV').textContent=lines.slice(0,4).join('\n')+(lines.length>4?'\n…':'');
+}
+function selStep(k){
+  if(k===1){
+    kept.filter(f=>varOf(f)<1e-3).forEach(f=>dropped[f]='near-constant');
+    kept=kept.filter(f=>!dropped[f]);
+  }
+  if(k===2){
+    const keep=[];
+    kept.forEach(f=>{
+      const h=keep.find(g=>Math.abs(corr(f,g))>0.95);
+      if(h)dropped[f]=`duplicate of ${h} (r = ${corr(f,h).toFixed(2)})`;
+      else keep.push(f);
+    });
+    kept=keep;
+  }
+  if(k===3){
+    const ranked=[...kept].sort((a,b)=>eta2(b)-eta2(a));
+    const top=ranked.slice(0,5);
+    ranked.slice(5).forEach(f=>dropped[f]='lower class separation');
+    kept=FEAT.filter(f=>top.includes(f));
+  }
+  renderSel();
+}
+
+/* wiring and reset */
+function resetVision(){
+  v7={cls:'car',i:0};ch7='R';v8={cls:'car',i:0};
+  markActive('.cls7','c7','car');
+  markActive('.chb','ch','R');
+  markActive('.cls8','c8','car');
+  render7();render8();
+  dataset=samples.map(s=>({label:s.cls,f:analyze(s).f}));
+  renderDS8();
+  kept=[...FEAT];dropped={};renderSel();
+}
+function initVision(){
+  document.querySelectorAll('.cls7').forEach(b=>b.onclick=()=>{v7={cls:b.dataset.c7,i:0};markActive('.cls7','c7',v7.cls);render7();});
+  document.getElementById('btnNext7').onclick=()=>{v7.i=(v7.i+1)%6;render7();};
+  document.querySelectorAll('.chb').forEach(b=>b.onclick=()=>{ch7=b.dataset.ch;markActive('.chb','ch',ch7);render7();});
+  document.getElementById('showC').onmousemove=e=>{
+    const b=e.currentTarget.getBoundingClientRect();
+    const x=Math.min(SZ-1,Math.floor((e.clientX-b.left)/b.width*SZ));
+    const y=Math.min(SZ-1,Math.floor((e.clientY-b.top)/b.height*SZ));
+    const [R,G,B]=pxRGB(sampleOf(v7.cls,v7.i),y,x);
+    document.getElementById('pixInfo').textContent=`pixel at row ${y}, column ${x}: Red ${R} · Green ${G} · Blue ${B}`;
+  };
+  document.querySelectorAll('.cls8').forEach(b=>b.onclick=()=>{v8={cls:b.dataset.c8,i:0};markActive('.cls8','c8',v8.cls);render8();});
+  document.getElementById('btnNext8').onclick=()=>{v8.i=(v8.i+1)%6;render8();};
+  document.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>selStep(+b.dataset.sel));
+  document.getElementById('btnSelReset').onclick=()=>{kept=[...FEAT];dropped={};renderSel();};
+  document.getElementById('btnSelDownload').onclick=()=>download('selected_features.csv',csvOf(dataset,kept));
+  document.getElementById('btnDownload').onclick=()=>download('image_features.csv',csvOf(dataset,FEAT));
+  resetVision();
+}
+
+/* ---------- reset ---------- */
+function resetAll(){
+  discRows=fresh();
+  document.getElementById('discTable').innerHTML='';
+  document.getElementById('discSummary').textContent='';
+  document.getElementById('discHist').innerHTML='';
+  document.getElementById('discLabels').innerHTML='';
+  document.getElementById('discStats').textContent='';
+  cleanRows=fresh();done.clear();renderClean();
+  showPool();
+  document.getElementById('trainBox').innerHTML='';
+  document.getElementById('testBox').innerHTML='';
+  document.getElementById('leakText').textContent='Pick one option to see what happens to the test set.';
+  placeScale('orig');
+  lam.value=0;skewSim();
+  renderEnc('oh');
+  document.getElementById('dateOut').innerHTML='';
+  document.querySelectorAll('.check input').forEach(c=>c.checked=false);
+  document.getElementById('finaleText').textContent='';
+  resetVision();
+}
+
+/* ---------- start ---------- */
+drawTable(document.getElementById('discTable'),discRows,false);
+renderClean();
+showPool();
+placeScale('orig');
+skewSim();
+renderEnc('oh');
+initVision();
+go(0);
+</script>
+</body>
+</html>
